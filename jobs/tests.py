@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -60,3 +61,42 @@ class CancelledChatLockTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.conversation.messages.count(), 0)
+
+
+def _voice_file():
+    return SimpleUploadedFile('engine.ogg', b'ogg-bytes', content_type='audio/ogg')
+
+
+class IntakeRequiresTextAndAudioTests(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(phone='+201011112222')
+
+    def test_text_only_does_not_create_order(self):
+        result = process_chat_message(self.customer, 'المحرك بيعمل صوت')
+        self.assertEqual(result.route, 'incomplete_intake')
+        self.assertIsNone(result.order_id)
+        self.assertFalse(Order.objects.filter(customer=self.customer).exists())
+
+    def test_audio_then_text_creates_order(self):
+        first = process_chat_message(self.customer, '', audio=_voice_file())
+        self.assertEqual(first.route, 'incomplete_intake')
+        second = process_chat_message(self.customer, 'المحرك بيعمل صوت غريب')
+        self.assertEqual(second.route, 'dumb_fallback')
+        self.assertIsNotNone(second.order_id)
+
+    def test_follow_up_on_bound_order_allows_text_only(self):
+        order = Order.objects.create(
+            customer=self.customer,
+            status=Order.Status.IN_PROGRESS,
+        )
+        conversation = Conversation.objects.create(
+            customer=self.customer,
+            order=order,
+        )
+        result = process_chat_message(
+            self.customer,
+            'الخطوات ايه؟',
+            conversation=conversation,
+        )
+        self.assertEqual(result.route, 'existing_order')
+        self.assertEqual(result.order_id, order.pk)

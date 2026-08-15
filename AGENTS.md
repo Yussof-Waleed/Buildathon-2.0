@@ -205,7 +205,7 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-  Msg[Customer text and/or audio] --> Labeler[Labeler guard]
+  Msg[Customer text AND audio] --> Labeler[Labeler guard]
   Labeler -->|unbound new_request| Bind[Bind this Conversation to new Order]
   Labeler -->|unbound irrelevant| Reply[Arabic reply; stay intake]
   Labeler -->|bound followup| Stay[Message stays on this order chat]
@@ -242,6 +242,7 @@ Output: list of label IDs to assign (multi-label). Kareem can override in UI.
 
 ### Audio handling
 
+- New intake (unbound chat) requires **text description and** a voice note before an Order is created. Follow-ups on a bound order may be text or audio alone.
 - Store audio file on `Message`. Kareem listens in portal.
 - Groq Whisper STT → transcript fed to Labeler and Tagger. **Do not block intake on STT failure.**
 - If audio-only and the transcript looks like speech, persist it on `Message.body` (do not overwrite a typed caption).
@@ -416,7 +417,7 @@ curl http://127.0.0.1:8000/   # {"status":"ok"}
 
 ## 12. End-to-end happy path (reference)
 
-1. Customer opens chat, enters phone (no OTP), sends text + engine audio
+1. Customer opens chat, enters phone (no OTP), sends **text description and** engine audio
 2. Labeler → `new_request`; **this chat binds** to a new Order (`pending_review`); Tagger assigns labels
 3. Kareem sees it in requests list and can reply in the same thread
 4. Kareem listens to audio, picks existing Diagnostic (or creates one on the fly)

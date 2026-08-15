@@ -72,13 +72,13 @@ def customer_home(request):
         body = request.POST.get('body', '').strip()
         audio = request.FILES.get('audio')
 
-        if not body and not audio:
+        if not body or not audio:
             return render(
                 request,
                 'customer/chat.html',
                 _chat_context(
                     get_customer(request),
-                    error=_('Type your message or record audio.'),
+                    error=_('Send a written description and a voice note of the problem.'),
                 ),
             )
 

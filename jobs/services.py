@@ -28,7 +28,7 @@ OPEN_ORDER_STATUSES = (
     Order.Status.READY_FOR_PICKUP,
 )
 
-Route = Literal['new_request', 'existing_order', 'irrelevant', 'dumb_fallback']
+Route = Literal['new_request', 'existing_order', 'irrelevant', 'dumb_fallback', 'incomplete_intake']
 
 
 @dataclass
@@ -380,6 +380,67 @@ def post_mechanic_message(order: Order, body: str, audio=None) -> Message:
     return message
 
 
+def _customer_intake_parts(conversation: Conversation) -> tuple[bool, bool]:
+    customer_messages = conversation.messages.filter(
+        author_type=Message.AuthorType.CUSTOMER,
+    )
+    has_text = customer_messages.exclude(body='').exists()
+    has_audio = any(bool(message.audio) for message in customer_messages)
+    return has_text, has_audio
+
+
+def _intake_incomplete_prompt(has_text: bool, has_audio: bool) -> str | None:
+    if has_text and has_audio:
+        return None
+    if has_text:
+        return _('وصلنا وصفك — ابعت كمان تسجيل صوتي لصوت المحرك أو المشكلة.')
+    if has_audio:
+        return _('وصلنا التسجيل — اكتب كمان وصف للمشكلة في رسالة.')
+    return _('ابعت وصف مكتوب وتسجيل صوتي للمشكلة.')
+
+
+def _labeler_text_for_intake(conversation: Conversation) -> str:
+    from ai.labeler import AUDIO_PLACEHOLDER
+    from ai.stt import looks_like_speech, transcribe_audio
+
+    texts: list[str] = []
+    for message in conversation.messages.filter(
+        author_type=Message.AuthorType.CUSTOMER,
+    ).order_by('created_at'):
+        if message.body.strip():
+            texts.append(message.body.strip())
+            continue
+        if not message.audio:
+            continue
+        transcript = transcribe_audio(message.audio)
+        if not transcript:
+            continue
+        if looks_like_speech(transcript):
+            message.body = transcript
+            message.save(update_fields=['body'])
+        texts.append(transcript)
+    return '\n'.join(texts) or AUDIO_PLACEHOLDER
+
+
+def _maybe_prompt_incomplete_intake(
+    conversation: Conversation,
+    channel: str = Message.Channel.WEB,
+) -> str | None:
+    if conversation.order_id:
+        return None
+    has_text, has_audio = _customer_intake_parts(conversation)
+    prompt = _intake_incomplete_prompt(has_text, has_audio)
+    if not prompt:
+        return None
+    Message.objects.create(
+        conversation=conversation,
+        author_type=Message.AuthorType.MECHANIC,
+        body=prompt,
+        channel=channel,
+    )
+    return prompt
+
+
 def _labeler_text_for_message(customer_message: Message, body: str) -> str:
     """Prefer typed text, then Whisper transcript, then the audio placeholder."""
     from ai.labeler import AUDIO_PLACEHOLDER
@@ -420,21 +481,6 @@ def process_chat_message(
 
     assert_order_chat_open(conversation.order)
 
-    if not is_llm_configured():
-        order = create_order_from_intake(
-            customer,
-            body,
-            audio=audio,
-            conversation=conversation,
-            channel=channel,
-            wa_message_id=wa_message_id,
-        )
-        return ProcessChatResult(
-            route='dumb_fallback',
-            order_id=order.pk,
-            redirect=True,
-        )
-
     customer_message = Message.objects.create(
         conversation=conversation,
         author_type=Message.AuthorType.CUSTOMER,
@@ -444,7 +490,29 @@ def process_chat_message(
         wa_message_id=wa_message_id,
     )
 
-    labeler_text = _labeler_text_for_message(customer_message, body)
+    if _maybe_prompt_incomplete_intake(conversation, channel=channel):
+        return ProcessChatResult(route='incomplete_intake')
+
+    if not is_llm_configured():
+        if conversation.order_id:
+            return ProcessChatResult(
+                route='existing_order',
+                order_id=conversation.order_id,
+            )
+        order = _bind_conversation_to_new_order(
+            conversation, customer, _labeler_text_for_intake(conversation),
+        )
+        return ProcessChatResult(
+            route='dumb_fallback',
+            order_id=order.pk,
+            redirect=True,
+        )
+
+    labeler_text = (
+        _labeler_text_for_intake(conversation)
+        if conversation.order_id is None
+        else _labeler_text_for_message(customer_message, body)
+    )
     open_orders = _open_orders_for_labeler(customer)
 
     try:

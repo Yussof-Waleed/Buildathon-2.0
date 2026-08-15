@@ -129,7 +129,7 @@ def process_inbound_message(msg: wa_types.Message) -> None:
     ).first()
     if stored:
         conversation = stored.conversation
-        if result.route == 'irrelevant':
+        if result.route == 'irrelevant' or result.route == 'incomplete_intake':
             mechanic_reply = (
                 conversation.messages.filter(
                     author_type=Message.AuthorType.MECHANIC,
