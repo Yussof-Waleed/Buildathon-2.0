@@ -238,6 +238,67 @@ msgstr ""
 msgid "Chat"
 msgstr ""
 
+msgid "Skip to content"
+msgstr "Skip to content"
+
+#: templates/shared/home.html
+msgid "Trusted workshop in Shubra"
+msgstr "Trusted workshop in Shubra"
+
+msgid "Trusted workshop in Shubra — car repair without the runaround."
+msgstr "Trusted workshop in Shubra — car repair without the runaround."
+
+msgid "No account needed — just your mobile number."
+msgstr "No account needed — just your mobile number."
+
+msgid "How it works"
+msgstr "How it works"
+
+msgid "Describe your car"
+msgstr "Describe your car"
+
+msgid "Message Kareem with text and an engine voice note."
+msgstr "Message Kareem with text and an engine voice note."
+
+msgid "Clear quote & pay"
+msgstr "Clear quote & pay"
+
+msgid "See the price, pay online, work starts after payment."
+msgstr "See the price, pay online, work starts after payment."
+
+msgid "Track & collect"
+msgstr "Track & collect"
+
+msgid "Follow each repair step live — come when it's ready."
+msgstr "Follow each repair step live — come when it's ready."
+
+msgid "Choose your portal"
+msgstr "Choose your portal"
+
+msgid "Chat & orders"
+msgstr "Chat & orders"
+
+msgid "Requests & quotes"
+msgstr "Requests & quotes"
+
+msgid "Trust"
+msgstr "Trust"
+
+msgid "Clear pricing"
+msgstr "Clear pricing"
+
+msgid "Live updates"
+msgstr "Live updates"
+
+msgid "Shubra neighbourhood"
+msgstr "Shubra neighbourhood"
+
+msgid "Payments ready"
+msgstr "Payments ready"
+
+msgid "Payments awaiting setup"
+msgstr "Payments awaiting setup"
+
 #: templates/customer/chat.html:11
 msgid "Shubra workshop"
 msgstr ""

@@ -4,7 +4,7 @@
 {% block title %}{% trans "Warsha" %} — {% trans "Payments" %}{% endblock %}
 
 {% block mechanic_content %}
-<section class="page-card animate-fade-up">
+<c-page-card>
   <div>
     <h1 class="text-xl font-extrabold text-paper">{% trans "Payments" %}</h1>
     <p class="mt-0.5 text-xs text-paper-muted">{% trans "Local Paymob ledger" %}</p>
@@ -20,25 +20,22 @@
   </div>
 
   <form method="get" class="mt-3 flex flex-wrap items-end gap-2">
-    <div class="min-w-[120px]">
-      <label for="status" class="text-xs text-paper-muted">{% trans "Status" %}</label>
+    <c-field class="min-w-[120px]" label="{% trans 'Status' %}" for_id="status">
       <select id="status" name="status" class="mt-0.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
         <option value="">{% trans "All" %}</option>
         {% for value, label in status_choices %}
           <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
-    </div>
-    <div class="min-w-[120px]">
-      <label for="date" class="text-xs text-paper-muted">{% trans "Date" %}</label>
+    </c-field>
+    <c-field class="min-w-[120px]" label="{% trans 'Date' %}" for_id="date">
       <select id="date" name="date" class="mt-0.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
         <option value="all" {% if date_filter == 'all' %}selected{% endif %}>{% trans "All" %}</option>
         <option value="today" {% if date_filter == 'today' %}selected{% endif %}>{% trans "Today" %}</option>
         <option value="week" {% if date_filter == 'week' %}selected{% endif %}>{% trans "7 days" %}</option>
       </select>
-    </div>
-    {% trans "Filter" as filter_label %}
-    {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=filter_label %}
+    </c-field>
+    <c-btn-pill variant="primary" type="submit">{% trans "Filter" %}</c-btn-pill>
   </form>
 
   {% if payments %}
@@ -85,5 +82,5 @@
   {% else %}
     <p class="mt-3 text-sm text-paper-muted">{% trans "No payments." %}</p>
   {% endif %}
-</section>
+</c-page-card>
 {% endblock %}

@@ -1,0 +1,6 @@
+<div class="rounded-2xl border border-dashed border-white/15 bg-black/20 px-6 py-10 text-center">
+  <p class="text-paper-muted">{{ slot }}</p>
+  {% if action %}
+    <div class="mt-4">{{ action }}</div>
+  {% endif %}
+</div>

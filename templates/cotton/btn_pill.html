@@ -1,0 +1,12 @@
+<c-vars variant="ghost" type="button" href="" icon="" class="" />
+{% if href %}
+<a href="{{ href }}" class="btn-pill btn-pill-{{ variant }} {{ class }}" {{ attrs }}>
+  {% if icon %}<i class="{{ icon }}" aria-hidden="true"></i>{% endif %}
+  <span>{{ slot }}</span>
+</a>
+{% else %}
+<button type="{{ type }}" class="btn-pill btn-pill-{{ variant }} {{ class }}" {{ attrs }}>
+  {% if icon %}<i class="{{ icon }}" aria-hidden="true"></i>{% endif %}
+  <span>{{ slot }}</span>
+</button>
+{% endif %}

@@ -11,15 +11,11 @@
         <i class="fa-solid fa-arrow-right text-xs back-icon"></i>
         {% trans "All my orders" %}
       </a>
-      <a href="{% url 'customer-chat' %}" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-copper-bright no-underline transition hover:border-copper/40" aria-label="{% trans 'New chat' %}">
-        <i class="fa-solid fa-plus text-sm"></i>
-      </a>
+      <c-btn-icon href="{% url 'customer-chat' %}" icon="fa-solid fa-plus text-sm" aria-label="{% trans 'New chat' %}" class="!h-9 !w-9" />
     </div>
     <div class="mt-2 flex flex-wrap items-start justify-between gap-2">
       <h1 class="text-xl font-extrabold text-paper">{% trans "Order" %} <bdi dir="ltr">#{{ order.pk }}</bdi></h1>
-      <div class="flex flex-col items-end gap-1">
-        <span class="text-sm font-bold text-copper-bright">{{ order.get_status_display }}</span>
-      </div>
+      <c-status-badge status="{{ order.status }}">{{ order.get_status_display }}</c-status-badge>
     </div>
   </div>
 
@@ -27,44 +23,34 @@
     {% if messages %}
       <ul class="space-y-2">
         {% for message in messages %}
-          <li class="rounded-xl border px-4 py-3 text-sm {% if message.tags == 'error' %}border-red-500/30 bg-red-500/10 text-red-200{% else %}border-emerald-500/30 bg-emerald-500/10 text-emerald-200{% endif %}">
-            {{ message }}
+          <li>
+            <c-alert type="{% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</c-alert>
           </li>
         {% endfor %}
       </ul>
     {% endif %}
 
     {% if payment_return %}
-      <p class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{% trans "Checking payment… refresh in a moment." %}</p>
+      <c-alert type="success">{% trans "Checking payment… refresh in a moment." %}</c-alert>
     {% endif %}
 
     {% if order.status == 'cancelled' %}
-      <div class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+      <c-alert type="error">
         <i class="fa-solid fa-ban me-1.5"></i>{% trans "This chat is closed — the order was cancelled." %}
-      </div>
+      </c-alert>
     {% endif %}
 
     {% if order.status == 'ready_for_pickup' %}
-      <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+      <c-alert type="success">
         <i class="fa-solid fa-car-side me-1.5 text-copper-bright"></i>{% trans "Your car is ready for pickup — come to the workshop." %}
-      </div>
+      </c-alert>
     {% endif %}
 
     {% if order.status == 'in_progress' or order.status == 'ready_for_pickup' %}
-      <div class="rounded-xl border border-white/10 bg-black/25 p-3">
-        <div class="mb-2 flex justify-between text-sm text-paper-muted">
-          <span>{% trans "Work progress" %}</span>
-          <span><bdi dir="ltr">{{ order.progress_percent }}%</bdi></span>
-        </div>
-        <div class="h-2 overflow-hidden rounded-full bg-white/10">
-          <div class="h-full rounded-full bg-gradient-to-r from-copper-dim to-copper-bright transition-all duration-500" style="width: {{ order.progress_percent }}%;"></div>
-        </div>
-        {% if order.status == 'in_progress' and order.remaining_eta_minutes %}
-          <p class="mt-2 text-xs text-paper-muted">
-            {% trans "Time remaining:" %} <bdi dir="ltr">{{ order.remaining_eta_minutes }}</bdi> {% trans "min" %}
-          </p>
-        {% endif %}
-      </div>
+      <c-progress
+        :percent="order.progress_percent"
+        remaining="{% if order.status == 'in_progress' and order.remaining_eta_minutes %}{{ order.remaining_eta_minutes }}{% endif %}"
+      />
     {% endif %}
   </div>
 
@@ -78,17 +64,15 @@
         hx-swap="innerHTML"
       {% endif %}
     >
-      {% include "shared/partials/message_thread.html" with order=order paymob_ready=paymob_ready viewer='customer' %}
+      <c-message-thread :order="order" :paymob_ready="paymob_ready" viewer="customer" />
     </div>
   </div>
 
-  <div class="shrink-0 border-t border-white/10 bg-garage-950/95">
+  <div class="composer-bar shrink-0 border-t border-white/10 bg-garage-950/95">
     {% if can_cancel %}
       <form method="post" action="{% url 'customer-order-cancel' order_id=order.pk %}" class="px-4 pt-3">
         {% csrf_token %}
-        <button type="submit" class="w-full rounded-xl border border-red-500/40 bg-transparent py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/10">
-          {% trans "Cancel order" %}
-        </button>
+        <c-btn-pill variant="danger" type="submit" class="w-full justify-center">{% trans "Cancel order" %}</c-btn-pill>
       </form>
     {% endif %}
     {% if order.chat_open %}
@@ -101,7 +85,7 @@
     >
       {% trans "Write to Kareem…" as composer_placeholder %}
       {% trans "Your message" as composer_aria %}
-      {% include "shared/partials/chat_composer.html" with composer_placeholder=composer_placeholder composer_aria=composer_aria %}
+      <c-chat-composer placeholder="{{ composer_placeholder }}" aria="{{ composer_aria }}" />
     </form>
     {% else %}
       <p class="px-4 py-3 text-center text-sm text-paper-muted">{% trans "This chat is closed — the order was cancelled." %}</p>

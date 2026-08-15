@@ -1,0 +1,21 @@
+{% load i18n %}
+<nav class="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-garage-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl" aria-label="{% trans 'Customer' %}">
+  <div class="flex w-full gap-1 px-2">
+    <a href="{% url 'customer-chat' %}"
+       {% if nav_active == 'chat' %}aria-current="page"{% endif %}
+       class="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs no-underline transition {% if nav_active == 'chat' %}text-copper-bright{% else %}text-paper-muted hover:text-paper{% endif %}">
+      <span class="flex h-9 w-9 items-center justify-center rounded-xl {% if nav_active == 'chat' %}bg-copper/20{% endif %}">
+        <i class="fa-solid fa-comment-dots text-base" aria-hidden="true"></i>
+      </span>
+      {% trans "Chat" %}
+    </a>
+    <a href="{% url 'customer-orders-list' %}"
+       {% if nav_active == 'orders' %}aria-current="page"{% endif %}
+       class="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs no-underline transition {% if nav_active == 'orders' %}text-copper-bright{% else %}text-paper-muted hover:text-paper{% endif %}">
+      <span class="flex h-9 w-9 items-center justify-center rounded-xl {% if nav_active == 'orders' %}bg-copper/20{% endif %}">
+        <i class="fa-solid fa-clipboard-list text-base" aria-hidden="true"></i>
+      </span>
+      {% trans "My orders" %}
+    </a>
+  </div>
+</nav>

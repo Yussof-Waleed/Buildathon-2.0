@@ -358,7 +358,8 @@ Premium neighbourhood workshop — **not** generic SaaS.
 templates/
   customer/     # chat, orders
   mechanic/     # requests, diagnostics, money
-  shared/       # base layout, components
+  shared/       # base layout, page shells
+  cotton/       # Django Cotton UI (`<c-btn-pill>`, `<c-page-card>`, …)
 static/
   css/          # one design system — no per-app CSS islands
 ```

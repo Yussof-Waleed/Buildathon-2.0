@@ -1,0 +1,8 @@
+<c-vars href="" compact />
+<a href="{% if href %}{{ href }}{% else %}{% url 'home' %}{% endif %}" class="inline-flex min-w-0 items-center gap-2 font-extrabold text-paper no-underline {% if compact %}text-base{% else %}text-lg{% endif %}">
+  <i class="fa-solid fa-screwdriver-wrench text-copper-bright {% if compact %}text-lg{% else %}text-xl drop-shadow-[0_0_8px_rgba(232,160,102,0.5)]{% endif %}" aria-hidden="true"></i>
+  <span class="inline-flex items-baseline {% if compact %}gap-1.5{% else %}gap-2{% endif %}" dir="ltr">
+    <span lang="ar" class="font-heading">ورشة</span>
+    <span class="font-en font-medium text-copper-bright {% if compact %}text-xs{% else %}text-sm tracking-wide{% endif %}" lang="en">Warsha</span>
+  </span>
+</a>

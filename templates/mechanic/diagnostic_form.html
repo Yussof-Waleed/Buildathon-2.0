@@ -4,7 +4,7 @@
 {% block title %}{% trans "Warsha" %} — {% if is_edit %}{% trans "Edit diagnostic" %}{% else %}{% trans "New diagnostic" %}{% endif %}{% endblock %}
 
 {% block mechanic_content %}
-<section class="page-card animate-fade-up">
+<c-page-card>
   <h1 class="text-xl font-extrabold text-paper">{% if is_edit %}{% trans "Edit diagnostic" %}{% else %}{% trans "New diagnostic" %}{% endif %}</h1>
   <p class="mt-0.5 text-xs">
     <a href="{% url 'kareem-diagnostics-list' %}" class="text-copper-bright no-underline">{% trans "All diagnostics" %}</a>
@@ -13,18 +13,15 @@
   <form method="post" class="mt-4 space-y-4">
     {% csrf_token %}
     <div class="grid gap-2 sm:grid-cols-2">
-      <div>
-        <label for="id_title_ar" class="text-xs text-paper-muted">{% trans "Arabic title" %}</label>
+      <c-field label="{% trans 'Arabic title' %}" for_id="id_title_ar">
         {{ form.title_ar }}
-      </div>
-      <div>
-        <label for="id_title_en" class="text-xs text-paper-muted">{% trans "English title" %}</label>
+      </c-field>
+      <c-field label="{% trans 'English title' %}" for_id="id_title_en">
         {{ form.title_en }}
-      </div>
-      <div class="sm:col-span-2">
-        <label for="id_price" class="text-xs text-paper-muted">{% trans "Price (EGP)" %}</label>
+      </c-field>
+      <c-field class="sm:col-span-2" label="{% trans 'Price (EGP)' %}" for_id="id_price">
         {{ form.price }}
-      </div>
+      </c-field>
     </div>
 
     <div>
@@ -35,30 +32,12 @@
           <div class="rounded-lg border border-white/10 bg-black/20 p-3">
             {% for hidden in step_form.hidden_fields %}{{ hidden }}{% endfor %}
             <div class="grid gap-2 sm:grid-cols-2">
-              <div>
-                <label class="text-xs text-paper-muted">{% trans "Arabic title" %}</label>
-                {{ step_form.title_ar }}
-              </div>
-              <div>
-                <label class="text-xs text-paper-muted">{% trans "English title" %}</label>
-                {{ step_form.title_en }}
-              </div>
-              <div>
-                <label class="text-xs text-paper-muted">{% trans "Minutes" %}</label>
-                {{ step_form.expected_minutes }}
-              </div>
-              <div>
-                <label class="text-xs text-paper-muted">{% trans "Sort order" %}</label>
-                {{ step_form.sort_order }}
-              </div>
-              <div class="sm:col-span-2">
-                <label class="text-xs text-paper-muted">{% trans "Arabic description" %}</label>
-                {{ step_form.description_ar }}
-              </div>
-              <div class="sm:col-span-2">
-                <label class="text-xs text-paper-muted">{% trans "English description" %}</label>
-                {{ step_form.description_en }}
-              </div>
+              <c-field label="{% trans 'Arabic title' %}">{{ step_form.title_ar }}</c-field>
+              <c-field label="{% trans 'English title' %}">{{ step_form.title_en }}</c-field>
+              <c-field label="{% trans 'Minutes' %}">{{ step_form.expected_minutes }}</c-field>
+              <c-field label="{% trans 'Sort order' %}">{{ step_form.sort_order }}</c-field>
+              <c-field class="sm:col-span-2" label="{% trans 'Arabic description' %}">{{ step_form.description_ar }}</c-field>
+              <c-field class="sm:col-span-2" label="{% trans 'English description' %}">{{ step_form.description_en }}</c-field>
               {% if step_form.DELETE %}
                 <div class="flex items-end">
                   <label class="flex items-center gap-1.5 text-xs text-red-300">
@@ -73,9 +52,8 @@
     </div>
 
     <div class="flex justify-end">
-      {% trans "Save" as save_label %}
-      {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=save_label icon="fa-solid fa-check text-xs" %}
+      <c-btn-pill variant="primary" type="submit" icon="fa-solid fa-check text-xs">{% trans "Save" %}</c-btn-pill>
     </div>
   </form>
-</section>
+</c-page-card>
 {% endblock %}

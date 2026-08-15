@@ -5,15 +5,9 @@
 {% block page_class %}flex min-h-dvh w-full items-stretch justify-center p-0 md:p-6{% endblock %}
 
 {% block content %}
-<div class="relative flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-garage-950 md:min-h-[min(844px,calc(100dvh-3rem))] md:rounded-[2rem] md:border md:border-copper/25 md:shadow-2xl">
+<div class="phone-shell relative flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-garage-950 md:min-h-[min(844px,calc(100dvh-3rem))] md:rounded-[2rem] md:border md:border-copper/25 md:shadow-2xl">
   <header class="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-garage-950/95 px-3 py-3 backdrop-blur-xl sm:px-4">
-    <a href="{% url 'home' %}" class="inline-flex min-w-0 items-center gap-2 text-base font-extrabold text-paper no-underline">
-      <i class="fa-solid fa-screwdriver-wrench text-lg text-copper-bright" aria-hidden="true"></i>
-      <span class="inline-flex items-baseline gap-1.5" dir="ltr">
-        <span lang="ar">ورشة</span>
-        <span class="font-en text-xs font-medium text-copper-bright" lang="en">Warsha</span>
-      </span>
-    </a>
+    <c-brand compact />
     <div class="flex shrink-0 items-center gap-2">
       {% if customer or session_customer %}
         <span class="hidden max-w-[7.5rem] truncate text-xs text-paper-muted sm:inline">
@@ -21,16 +15,16 @@
           <bdi dir="ltr">{{ customer.phone|default:session_customer.phone }}</bdi>
         </span>
       {% endif %}
-      {% include "shared/partials/locale_toggle.html" %}
+      <c-locale-toggle />
     </div>
   </header>
 
-  <div class="flex min-h-0 flex-1 flex-col {% if nav_active %}pb-20{% endif %}">
+  <div class="flex min-h-0 flex-1 flex-col {% if nav_active %}pb-[calc(4.5rem+env(safe-area-inset-bottom))]{% endif %}">
     {% block customer_content %}{% endblock %}
   </div>
 
   {% if nav_active %}
-    {% include "customer/partials/bottom_nav.html" %}
+    <c-customer-nav />
   {% endif %}
 </div>
 {% endblock %}

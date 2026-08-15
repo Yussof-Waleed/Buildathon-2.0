@@ -160,7 +160,7 @@ def message_bubble(context, message, order=None, paymob_ready=False, viewer='cus
     ctx['csrf_token'] = context.get('csrf_token')
     return mark_safe(
         render_to_string(
-            'shared/partials/message_bubble.html',
+            'cotton/message_bubble.html',
             ctx,
             request=context.get('request'),
         )
