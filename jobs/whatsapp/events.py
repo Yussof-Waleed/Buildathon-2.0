@@ -7,6 +7,7 @@ from jobs.whatsapp.copy import (
     quote_whatsapp_text,
     ready_whatsapp_text,
     step_done_whatsapp_text,
+    work_started_whatsapp_text,
 )
 from jobs.whatsapp.outbound import customer_uses_whatsapp, notify_order_whatsapp
 
@@ -42,6 +43,10 @@ def notify_ready(order: Order) -> None:
 
 def notify_paid(order: Order) -> None:
     notify_order_whatsapp(order, paid_whatsapp_text(order))
+
+
+def notify_work_started(order: Order) -> None:
+    notify_order_whatsapp(order, work_started_whatsapp_text(order))
 
 
 def notify_mechanic_reply(order: Order, body: str) -> None:

@@ -17,6 +17,7 @@ from jobs.whatsapp.events import (
     notify_quote,
     notify_ready,
     notify_step_done,
+    notify_work_started,
 )
 
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
@@ -24,6 +25,7 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024
 OPEN_ORDER_STATUSES = (
     Order.Status.PENDING_REVIEW,
     Order.Status.QUOTED,
+    Order.Status.PAID,
     Order.Status.IN_PROGRESS,
     Order.Status.READY_FOR_PICKUP,
 )
@@ -166,6 +168,25 @@ def snapshot_diagnostic_on_order(
     )
 
     notify_quote(order)
+    return order
+
+
+def start_order_work(order: Order) -> Order:
+    """Kareem starts the job after payment — quoted/paid never auto-start."""
+    if order.status != Order.Status.PAID:
+        return order
+
+    order.status = Order.Status.IN_PROGRESS
+    order.save(update_fields=['status', 'updated_at'])
+
+    conversation = _ensure_conversation(order)
+    Message.objects.create(
+        conversation=conversation,
+        author_type=Message.AuthorType.MECHANIC,
+        body='__started__',
+        channel=Message.Channel.WEB,
+    )
+    notify_work_started(order)
     return order
 
 

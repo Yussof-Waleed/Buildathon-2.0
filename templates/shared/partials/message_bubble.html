@@ -74,6 +74,11 @@
           <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
           {{ text }}
         </p>
+      {% elif kind == 'started' %}
+        <p class="msg-payment-banner">
+          <i class="fa-solid fa-wrench text-copper-bright" aria-hidden="true"></i>
+          {{ text }}
+        </p>
       {% elif kind == 'completed' %}
         <p class="msg-payment-banner">
           <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>

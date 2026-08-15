@@ -20,6 +20,8 @@ def _message_kind(body: str) -> str:
         return 'ready'
     if text.startswith('__payment__'):
         return 'payment'
+    if text.startswith('__started__'):
+        return 'started'
     if text.startswith('__completed__'):
         return 'completed'
     if text.startswith('[order:'):
@@ -94,6 +96,7 @@ def _body_after_prefix(body: str) -> str:
         text.replace('__step__', '')
         .replace('__ready__', '')
         .replace('__payment__', '')
+        .replace('__started__', '')
         .replace('__completed__', '')
         .strip()
     )
@@ -145,7 +148,9 @@ def _message_bubble_context(message, order=None, paymob_ready=False, viewer='cus
     elif kind == 'ready':
         ctx['text'] = _('Your car is ready for pickup — come to the workshop.')
     elif kind == 'payment':
-        ctx['text'] = _('Payment confirmed — work has started on your order.')
+        ctx['text'] = _('Payment confirmed — Kareem will start when he is ready.')
+    elif kind == 'started':
+        ctx['text'] = _('Kareem started work on your order.')
     elif kind == 'completed':
         ctx['text'] = _('Car collected — thank you for trusting Warsha.')
     elif kind == 'text':

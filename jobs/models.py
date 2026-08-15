@@ -10,6 +10,7 @@ class Order(models.Model):
     class Status(models.TextChoices):
         PENDING_REVIEW = 'pending_review', _('Pending review')
         QUOTED = 'quoted', _('Quoted')
+        PAID = 'paid', _('Paid')
         IN_PROGRESS = 'in_progress', _('In progress')
         READY_FOR_PICKUP = 'ready_for_pickup', _('Ready for pickup')
         COMPLETED = 'completed', _('Completed')

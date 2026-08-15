@@ -27,8 +27,9 @@ def apply_successful_payment(
     intention_id: str = '',
 ) -> bool:
     """
-    Mark order paid and in_progress. Idempotent on paymob_transaction_id.
-    Returns True if payment was applied (or already applied).
+    Record a paid Payment and move quoted → paid.
+    Does not start work — Kareem clicks Start work for that.
+    Idempotent on paymob_transaction_id.
     """
     with transaction.atomic():
         order = Order.objects.select_for_update().get(pk=order_id)
@@ -36,7 +37,7 @@ def apply_successful_payment(
         if Payment.objects.filter(paymob_transaction_id=paymob_transaction_id).exists():
             return True
 
-        if order.status == Order.Status.IN_PROGRESS:
+        if order.status == Order.Status.PAID:
             return True
 
         if order.status != Order.Status.QUOTED:
@@ -53,7 +54,7 @@ def apply_successful_payment(
         except IntegrityError:
             return True
 
-        order.status = Order.Status.IN_PROGRESS
+        order.status = Order.Status.PAID
         order.save(update_fields=['status', 'updated_at'])
 
         conversation = _ensure_conversation(order)

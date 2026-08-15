@@ -41,6 +41,7 @@ body > main {
 
 .status-pending_review { background: rgba(232, 184, 74, 0.2); color: #e8c84a; }
 .status-quoted { background: rgba(100, 149, 237, 0.2); color: #8ab4f8; }
+.status-paid { background: rgba(76, 175, 130, 0.18); color: #7dcea0; }
 .status-in_progress { background: rgba(76, 175, 130, 0.2); color: #6dd9a0; }
 .status-ready_for_pickup { background: rgba(76, 175, 130, 0.35); color: #8ef0b8; }
 .status-completed { background: rgba(255, 255, 255, 0.1); color: #a89f94; }

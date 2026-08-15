@@ -128,7 +128,7 @@
     </details>
   {% endif %}
 
-  {% if can_quote or can_confirm_paid or can_mark_ready or can_mark_completed %}
+  {% if can_quote or can_confirm_paid or can_start_work or can_mark_ready or can_mark_completed %}
     <div class="toolbar-sticky">
       <div class="toolbar-sticky-inner flex gap-2 overflow-x-auto">
         {% if can_quote %}
@@ -142,6 +142,13 @@
             {% csrf_token %}
             {% trans "Confirm payment" as confirm_paid_label %}
             {% include "shared/partials/btn_pill.html" with variant="dev" type="submit" label=confirm_paid_label icon="fa-solid fa-receipt text-xs" %}
+          </form>
+        {% endif %}
+        {% if can_start_work %}
+          <form method="post" action="{% url 'kareem-start-work' order_id=order.pk %}" class="inline">
+            {% csrf_token %}
+            {% trans "Start work" as start_work_label %}
+            {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=start_work_label icon="fa-solid fa-play text-xs" %}
           </form>
         {% endif %}
         {% if can_mark_ready %}

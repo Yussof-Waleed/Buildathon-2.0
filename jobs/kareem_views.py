@@ -20,6 +20,7 @@ from jobs.services import (
     piasters_from_egp,
     post_mechanic_message,
     snapshot_diagnostic_on_order,
+    start_order_work,
     validate_audio_upload,
 )
 from jobs.views import ACTIVE_POLL_STATUSES
@@ -132,6 +133,7 @@ def kareem_requests_list(request):
                 status=Order.Status.PENDING_REVIEW,
             ).count(),
             'quoted_count': Order.objects.filter(status=Order.Status.QUOTED).count(),
+            'paid_count': Order.objects.filter(status=Order.Status.PAID).count(),
             'in_progress_count': Order.objects.filter(
                 status=Order.Status.IN_PROGRESS,
             ).count(),
@@ -157,6 +159,7 @@ def kareem_request_detail(request, order_id):
     diagnostics = Diagnostic.objects.prefetch_related('steps').order_by('title_ar')
     can_quote = order.status == Order.Status.PENDING_REVIEW
     can_confirm_paid = order.status == Order.Status.QUOTED
+    can_start_work = order.status == Order.Status.PAID
     can_mark_ready = order.status == Order.Status.IN_PROGRESS
     can_mark_completed = order.status == Order.Status.READY_FOR_PICKUP
     can_complete_steps = order.status == Order.Status.IN_PROGRESS
@@ -173,6 +176,7 @@ def kareem_request_detail(request, order_id):
             'diagnostics': diagnostics,
             'can_quote': can_quote,
             'can_confirm_paid': can_confirm_paid,
+            'can_start_work': can_start_work,
             'can_mark_ready': can_mark_ready,
             'can_mark_completed': can_mark_completed,
             'can_complete_steps': can_complete_steps,
@@ -246,7 +250,23 @@ def kareem_confirm_paid(request, order_id):
         transaction_id,
         amount_piasters,
     )
-    messages.success(request, _('Payment confirmed (dev) — work started.'))
+    messages.success(request, _('Payment confirmed — start work when you are ready.'))
+    return redirect('kareem-request-detail', order_id=order_id)
+
+
+@staff_required
+def kareem_start_work(request, order_id):
+    if request.method != 'POST':
+        return redirect('kareem-request-detail', order_id=order_id)
+
+    order = get_object_or_404(Order, pk=order_id)
+
+    if order.status != Order.Status.PAID:
+        messages.error(request, _('Work can start only after payment is confirmed.'))
+        return redirect('kareem-request-detail', order_id=order_id)
+
+    start_order_work(order)
+    messages.success(request, _('Work started.'))
     return redirect('kareem-request-detail', order_id=order_id)
 
 

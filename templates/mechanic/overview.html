@@ -10,7 +10,7 @@
     <p class="mt-0.5 text-xs text-paper-muted">{% trans "Kareem's board" %}</p>
   </div>
 
-  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
     <div class="rounded-lg border border-white/10 bg-black/25 p-3">
       <p class="text-[0.65rem] text-paper-muted">{% trans "Pending review" %}</p>
       <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.pending_review }}</p>
@@ -18,6 +18,10 @@
     <div class="rounded-lg border border-white/10 bg-black/25 p-3">
       <p class="text-[0.65rem] text-paper-muted">{% trans "Quoted" %}</p>
       <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.quoted }}</p>
+    </div>
+    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
+      <p class="text-[0.65rem] text-paper-muted">{% trans "Paid" %}</p>
+      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.paid }}</p>
     </div>
     <div class="rounded-lg border border-white/10 bg-black/25 p-3">
       <p class="text-[0.65rem] text-paper-muted">{% trans "In progress" %}</p>
