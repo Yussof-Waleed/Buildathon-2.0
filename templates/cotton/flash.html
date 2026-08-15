@@ -1,0 +1,11 @@
+{% if messages %}
+  <ul class="mb-3 space-y-1.5">
+    {% for message in messages %}
+      <li>
+        <c-alert type="{% if message.tags == 'error' %}error{% else %}success{% endif %}" class="!rounded-lg !px-3 !py-2 !text-xs">
+          {{ message }}
+        </c-alert>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

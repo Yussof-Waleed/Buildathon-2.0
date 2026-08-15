@@ -1,0 +1,10 @@
+<c-vars type="button" href="" icon="" size="" class="" />
+{% if href %}
+<a href="{{ href }}" class="btn-icon {% if size == 'sm' %}btn-icon-sm{% endif %} {{ class }}" {{ attrs }}>
+  <i class="{{ icon }}" aria-hidden="true"></i>
+</a>
+{% else %}
+<button type="{{ type }}" class="btn-icon {% if size == 'sm' %}btn-icon-sm{% endif %} {{ class }}" {{ attrs }}>
+  <i class="{{ icon }}" aria-hidden="true"></i>
+</button>
+{% endif %}

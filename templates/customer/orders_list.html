@@ -11,9 +11,7 @@
       <p class="mt-1 text-sm text-paper-muted">{% trans "All your orders at Kareem's workshop" %}</p>
     </div>
     {% if orders %}
-      <a href="{% url 'customer-chat' %}" class="shrink-0 rounded-xl bg-gradient-to-r from-copper-bright to-copper-dim px-4 py-2.5 text-sm font-bold text-garage-950 no-underline shadow-glow">
-        {% trans "New chat" %}
-      </a>
+      <c-btn-pill href="{% url 'customer-chat' %}" variant="primary">{% trans "New chat" %}</c-btn-pill>
     {% endif %}
   </div>
 
@@ -23,13 +21,13 @@
         <li>
           <a
             href="{% url 'customer-order-detail' order_id=order.pk %}"
-            class="block rounded-2xl border border-white/10 bg-black/25 p-4 no-underline transition hover:border-copper/30 hover:bg-black/40"
+            class="block rounded-2xl border border-white/10 bg-black/25 p-4 no-underline transition duration-200 hover:border-copper/35 hover:bg-black/40"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <strong class="text-paper">{% trans "Order" %} <bdi dir="ltr">#{{ order.pk }}</bdi></strong>
-                  <span class="text-sm font-semibold text-copper-bright">{{ order.get_status_display }}</span>
+                  <c-status-badge status="{{ order.status }}">{{ order.get_status_display }}</c-status-badge>
                 </div>
                 <p class="mt-1 truncate text-sm text-paper-muted" dir="auto">
                   {% if order.localized_quoted_title %}
@@ -41,19 +39,13 @@
                   {% endif %}
                 </p>
                 {% if order.quoted_price %}
-                  <p class="mt-1 text-lg font-bold text-copper-bright">
+                  <p class="mt-1 text-lg font-bold tabular-nums text-copper-bright">
                     <bdi dir="ltr">{{ order.quoted_price }}</bdi> {% trans "EGP" %}
                   </p>
                 {% endif %}
                 {% if order.status == 'in_progress' or order.status == 'ready_for_pickup' %}
                   <div class="mt-2">
-                    <div class="mb-1 flex justify-between text-xs text-paper-muted">
-                      <span>{% trans "Work progress" %}</span>
-                      <span><bdi dir="ltr">{{ order.progress_percent }}%</bdi></span>
-                    </div>
-                    <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
-                      <div class="h-full rounded-full bg-gradient-to-r from-copper-dim to-copper-bright" style="width: {{ order.progress_percent }}%;"></div>
-                    </div>
+                    <c-progress compact :percent="order.progress_percent" />
                   </div>
                 {% endif %}
                 <p class="mt-2 text-xs text-paper-muted"><bdi dir="ltr">{{ order.created_at|date:"d/m H:i" }}</bdi></p>
@@ -67,12 +59,12 @@
       {% endfor %}
     </ul>
   {% else %}
-    <div class="rounded-2xl border border-dashed border-white/15 bg-black/20 px-6 py-10 text-center">
-      <p class="text-paper-muted">{% trans "No orders yet" %}</p>
-      <a href="{% url 'customer-chat' %}" class="mt-4 inline-block rounded-xl bg-gradient-to-r from-copper-bright to-copper-dim px-6 py-3 font-bold text-garage-950 no-underline shadow-glow transition hover:shadow-glow-lg">
-        {% trans "Start a chat" %}
-      </a>
-    </div>
+    <c-empty-state>
+      {% trans "No orders yet" %}
+      <c-slot name="action">
+        <c-btn-pill href="{% url 'customer-chat' %}" variant="primary">{% trans "Start a chat" %}</c-btn-pill>
+      </c-slot>
+    </c-empty-state>
   {% endif %}
 </div>
 {% endblock %}

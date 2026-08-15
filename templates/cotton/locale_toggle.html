@@ -1,0 +1,21 @@
+{% load i18n %}
+<div class="inline-flex items-center rounded-xl border border-white/10 bg-black/30 p-0.5 text-sm" role="group" aria-label="{% trans 'Language' %}">
+  <form method="post" action="{% url 'set_language' %}" class="inline">
+    {% csrf_token %}
+    <input type="hidden" name="language" value="ar">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit"
+      class="min-h-10 cursor-pointer rounded-lg px-3 py-1.5 font-medium transition {% if LANGUAGE_CODE|slice:':2' == 'ar' %}bg-copper/25 text-copper-bright{% else %}text-paper-muted hover:text-paper{% endif %}">
+      عربي
+    </button>
+  </form>
+  <form method="post" action="{% url 'set_language' %}" class="inline">
+    {% csrf_token %}
+    <input type="hidden" name="language" value="en">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit"
+      class="min-h-10 cursor-pointer rounded-lg px-3 py-1.5 font-en font-medium transition {% if LANGUAGE_CODE|slice:':2' == 'en' %}bg-copper/25 text-copper-bright{% else %}text-paper-muted hover:text-paper{% endif %}">
+      EN
+    </button>
+  </form>
+</div>

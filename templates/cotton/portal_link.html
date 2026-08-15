@@ -1,0 +1,12 @@
+{% load i18n %}
+<c-vars href="" icon="" title="" subtitle="" class="" />
+<a href="{{ href }}" class="group flex min-h-[72px] items-center gap-3 rounded-2xl border p-4 text-paper no-underline backdrop-blur transition duration-200 hover:-translate-y-0.5 {{ class }}" {{ attrs }}>
+  <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-black/35 text-xl text-copper-bright" aria-hidden="true">
+    <i class="{{ icon }}"></i>
+  </span>
+  <span class="text-start">
+    <strong class="block font-heading text-lg">{{ title }}</strong>
+    <span class="font-en text-sm text-paper-muted">{{ subtitle }}</span>
+  </span>
+  <i class="fa-solid fa-chevron-left ms-auto text-sm text-paper-muted back-icon" aria-hidden="true"></i>
+</a>

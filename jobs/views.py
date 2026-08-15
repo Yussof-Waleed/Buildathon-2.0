@@ -13,7 +13,6 @@ from jobs.services import (
     process_chat_message,
     validate_audio_upload,
 )
-from payments.paymob_config import get_paymob_readiness
 
 ACTIVE_POLL_STATUSES = frozenset({
     Order.Status.PENDING_REVIEW,
@@ -25,8 +24,7 @@ ACTIVE_POLL_STATUSES = frozenset({
 
 
 def home(request):
-    paymob = get_paymob_readiness()
-    return render(request, 'shared/home.html', {'paymob': paymob})
+    return render(request, 'shared/home.html')
 
 
 def _chat_context(customer, error=None):
@@ -73,13 +71,13 @@ def customer_home(request):
         body = request.POST.get('body', '').strip()
         audio = request.FILES.get('audio')
 
-        if not body or not audio:
+        if not body and not audio:
             return render(
                 request,
                 'customer/chat.html',
                 _chat_context(
                     get_customer(request),
-                    error=_('Send a written description and a voice note of the problem.'),
+                    error=_('Send a written description or a voice note of the problem.'),
                 ),
             )
 
@@ -158,7 +156,6 @@ def customer_order_detail(request, order_id):
     )
     show_agreement = order.quoted_price is not None
     payment_return = request.GET.get('paid') == 'return'
-    paymob = get_paymob_readiness()
     poll_thread = order.status in ACTIVE_POLL_STATUSES
 
     return render(
@@ -172,7 +169,6 @@ def customer_order_detail(request, order_id):
             'can_cancel': can_cancel,
             'show_agreement': show_agreement,
             'payment_return': payment_return,
-            'paymob_ready': paymob['ready'],
             'poll_thread': poll_thread,
         },
     )
@@ -194,7 +190,6 @@ def customer_order_thread(request, order_id):
         {
             'thread_messages': messages_list,
             'order': order,
-            'paymob_ready': get_paymob_readiness()['ready'],
             'viewer': 'customer',
         },
     )

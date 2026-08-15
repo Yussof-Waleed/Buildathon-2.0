@@ -4,7 +4,7 @@
 {% block title %}{% trans "Warsha" %} — {% trans "Request" %} #{{ order.pk }}{% endblock %}
 
 {% block mechanic_content %}
-<section class="page-card animate-fade-up pb-2">
+<c-page-card class="pb-2">
   <div class="flex flex-wrap items-start justify-between gap-2">
     <div>
       <h1 class="text-xl font-extrabold text-paper">{% trans "Request" %} <bdi dir="ltr">#{{ order.pk }}</bdi></h1>
@@ -16,19 +16,19 @@
         {% endif %}
       </p>
     </div>
-    <span class="text-xs font-semibold text-copper-bright">{{ order.get_status_display }}</span>
+    <c-status-badge status="{{ order.status }}">{{ order.get_status_display }}</c-status-badge>
   </div>
 
   {% if order.status == 'cancelled' %}
-    <p class="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+    <c-alert type="error" class="mt-3">
       <i class="fa-solid fa-ban me-1.5"></i>{% trans "This chat is closed — the order was cancelled." %}
-    </p>
+    </c-alert>
   {% endif %}
 
   {% if order.labels.all %}
     <div class="mt-2 flex flex-wrap gap-1.5">
       {% for label in order.labels.all %}
-        <span class="rounded-full border border-copper/30 bg-copper/10 px-2 py-0.5 text-xs text-copper-bright">{{ label.localized_title }}</span>
+        <c-label-chip class="px-2 text-xs">{{ label.localized_title }}</c-label-chip>
       {% endfor %}
     </div>
   {% endif %}
@@ -44,7 +44,7 @@
         hx-swap="innerHTML"
       {% endif %}
     >
-      {% include "shared/partials/message_thread.html" with order=order viewer='kareem' %}
+      <c-message-thread :order="order" viewer="kareem" />
     </div>
     {% if order.chat_open %}
     <form
@@ -56,7 +56,7 @@
     >
       {% trans "Write a reply to the customer…" as kareem_placeholder %}
       {% trans "Kareem reply" as kareem_aria %}
-      {% include "shared/partials/chat_composer.html" with composer_placeholder=kareem_placeholder composer_aria=kareem_aria %}
+      <c-chat-composer placeholder="{{ kareem_placeholder }}" aria="{{ kareem_aria }}" />
     </form>
     {% else %}
       <p class="mt-3 text-center text-sm text-paper-muted">{% trans "This chat is closed — the order was cancelled." %}</p>
@@ -79,8 +79,7 @@
             {% if not step.completed_at %}
               <form method="post" action="{% url 'kareem-complete-step' order_id=order.pk step_id=step.pk %}">
                 {% csrf_token %}
-                {% trans "Complete" as complete_aria %}
-                {% include "shared/partials/btn_icon.html" with type="submit" icon="fa-solid fa-check" aria_label=complete_aria extra_class="btn-icon-sm" %}
+                <c-btn-icon type="submit" size="sm" icon="fa-solid fa-check" aria-label="{% trans 'Complete' %}" />
               </form>
             {% endif %}
           </li>
@@ -121,69 +120,61 @@
             </span>
           </p>
         {% endif %}
-        <label for="diagnostic_id" class="text-xs text-paper-muted">{% trans "Diagnostic" %}</label>
-        <select id="diagnostic_id" name="diagnostic_id" required class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
-          <option value="">{% trans "— Choose —" %}</option>
-          {% for diagnostic in diagnostics %}
-            <option
-              value="{{ diagnostic.pk }}"
-              {% if order.suggested_diagnostic_id == diagnostic.pk %}selected{% endif %}
-            >
-              {{ diagnostic.localized_title }} — {{ diagnostic.price }} {% trans "EGP" %}{% if order.suggested_diagnostic_id == diagnostic.pk %} — {% trans "suggested" %}{% endif %}
-            </option>
-          {% endfor %}
-        </select>
-        <label for="kareem_note" class="text-xs text-paper-muted">{% trans "Note (optional)" %}</label>
-        <textarea id="kareem_note" name="kareem_note" rows="2" dir="auto" placeholder="{% trans 'Example: we can start tomorrow morning' %}" class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none"></textarea>
+        <c-field label="{% trans 'Diagnostic' %}" for_id="diagnostic_id">
+          <select id="diagnostic_id" name="diagnostic_id" required class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
+            <option value="">{% trans "— Choose —" %}</option>
+            {% for diagnostic in diagnostics %}
+              <option
+                value="{{ diagnostic.pk }}"
+                {% if order.suggested_diagnostic_id == diagnostic.pk %}selected{% endif %}
+              >
+                {{ diagnostic.localized_title }} — {{ diagnostic.price }} {% trans "EGP" %}{% if order.suggested_diagnostic_id == diagnostic.pk %} — {% trans "suggested" %}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </c-field>
+        <c-field label="{% trans 'Note (optional)' %}" for_id="kareem_note">
+          <textarea id="kareem_note" name="kareem_note" rows="2" dir="auto" placeholder="{% trans 'Example: we can start tomorrow morning' %}" class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none"></textarea>
+        </c-field>
         <div class="flex justify-end">
-          {% trans "Send quote" as send_quote_label %}
-          {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=send_quote_label icon="fa-solid fa-paper-plane text-xs" %}
+          <c-btn-pill variant="primary" type="submit" icon="fa-solid fa-paper-plane text-xs">{% trans "Send quote" %}</c-btn-pill>
         </div>
       </form>
     </details>
   {% endif %}
 
   {% if can_quote or can_confirm_paid or can_start_work or can_mark_ready or can_mark_completed %}
-    <div class="toolbar-sticky">
-      <div class="toolbar-sticky-inner flex gap-2 overflow-x-auto">
-        {% if can_quote %}
-          <button type="button" id="open-quote-btn" class="btn-pill btn-pill-primary">
-            <i class="fa-solid fa-tag text-xs" aria-hidden="true"></i>
-            <span>{% trans "Quote" %}</span>
-          </button>
-        {% endif %}
-        {% if can_confirm_paid %}
-          <form method="post" action="{% url 'kareem-confirm-paid' order_id=order.pk %}" class="inline">
-            {% csrf_token %}
-            {% trans "Confirm payment" as confirm_paid_label %}
-            {% include "shared/partials/btn_pill.html" with variant="dev" type="submit" label=confirm_paid_label icon="fa-solid fa-receipt text-xs" %}
-          </form>
-        {% endif %}
-        {% if can_start_work %}
-          <form method="post" action="{% url 'kareem-start-work' order_id=order.pk %}" class="inline">
-            {% csrf_token %}
-            {% trans "Start work" as start_work_label %}
-            {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=start_work_label icon="fa-solid fa-play text-xs" %}
-          </form>
-        {% endif %}
-        {% if can_mark_ready %}
-          <form method="post" action="{% url 'kareem-mark-ready' order_id=order.pk %}" class="inline">
-            {% csrf_token %}
-            {% trans "Ready for pickup" as ready_label %}
-            {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=ready_label icon="fa-solid fa-car text-xs" %}
-          </form>
-        {% endif %}
-        {% if can_mark_completed %}
-          <form method="post" action="{% url 'kareem-mark-completed' order_id=order.pk %}" class="inline">
-            {% csrf_token %}
-            {% trans "Collected" as collected_label %}
-            {% include "shared/partials/btn_pill.html" with variant="success" type="submit" label=collected_label icon="fa-solid fa-circle-check text-xs" %}
-          </form>
-        {% endif %}
-      </div>
-    </div>
+    <c-toolbar>
+      {% if can_quote %}
+        <c-btn-pill variant="primary" type="button" id="open-quote-btn" icon="fa-solid fa-tag text-xs">{% trans "Quote" %}</c-btn-pill>
+      {% endif %}
+      {% if can_confirm_paid %}
+        <form method="post" action="{% url 'kareem-confirm-paid' order_id=order.pk %}" class="inline">
+          {% csrf_token %}
+          <c-btn-pill variant="dev" type="submit" icon="fa-solid fa-receipt text-xs">{% trans "Confirm payment" %}</c-btn-pill>
+        </form>
+      {% endif %}
+      {% if can_start_work %}
+        <form method="post" action="{% url 'kareem-start-work' order_id=order.pk %}" class="inline">
+          {% csrf_token %}
+          <c-btn-pill variant="primary" type="submit" icon="fa-solid fa-play text-xs">{% trans "Start work" %}</c-btn-pill>
+        </form>
+      {% endif %}
+      {% if can_mark_ready %}
+        <form method="post" action="{% url 'kareem-mark-ready' order_id=order.pk %}" class="inline">
+          {% csrf_token %}
+          <c-btn-pill variant="primary" type="submit" icon="fa-solid fa-car text-xs">{% trans "Ready for pickup" %}</c-btn-pill>
+        </form>
+      {% endif %}
+      {% if can_mark_completed %}
+        <form method="post" action="{% url 'kareem-mark-completed' order_id=order.pk %}" class="inline">
+          {% csrf_token %}
+          <c-btn-pill variant="success" type="submit" icon="fa-solid fa-circle-check text-xs">{% trans "Collected" %}</c-btn-pill>
+        </form>
+      {% endif %}
+    </c-toolbar>
   {% endif %}
-</section>
+</c-page-card>
 
 {% if can_quote %}
 <script>

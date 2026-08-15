@@ -1,0 +1,16 @@
+{% load i18n %}
+<c-vars percent="0" remaining="" compact />
+<div class="{% if not compact %}rounded-xl border border-white/10 bg-black/25 p-3{% endif %}">
+  <div class="mb-{% if compact %}1{% else %}2{% endif %} flex justify-between text-{% if compact %}xs{% else %}sm{% endif %} text-paper-muted">
+    <span>{% trans "Work progress" %}</span>
+    <span><bdi dir="ltr">{{ percent }}%</bdi></span>
+  </div>
+  <div class="{% if compact %}h-1.5{% else %}h-2{% endif %} overflow-hidden rounded-full bg-white/10">
+    <div class="h-full rounded-full bg-gradient-to-r from-copper-dim to-copper-bright transition-all duration-500" style="width: {{ percent }}%;"></div>
+  </div>
+  {% if remaining %}
+    <p class="mt-2 text-xs text-paper-muted">
+      {% trans "Time remaining:" %} <bdi dir="ltr">{{ remaining }}</bdi> {% trans "min" %}
+    </p>
+  {% endif %}
+</div>

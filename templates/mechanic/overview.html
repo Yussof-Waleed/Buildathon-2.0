@@ -11,26 +11,11 @@
   </div>
 
   <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
-      <p class="text-[0.65rem] text-paper-muted">{% trans "Pending review" %}</p>
-      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.pending_review }}</p>
-    </div>
-    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
-      <p class="text-[0.65rem] text-paper-muted">{% trans "Quoted" %}</p>
-      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.quoted }}</p>
-    </div>
-    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
-      <p class="text-[0.65rem] text-paper-muted">{% trans "Paid" %}</p>
-      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.paid }}</p>
-    </div>
-    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
-      <p class="text-[0.65rem] text-paper-muted">{% trans "In progress" %}</p>
-      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.in_progress }}</p>
-    </div>
-    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
-      <p class="text-[0.65rem] text-paper-muted">{% trans "Ready for pickup" %}</p>
-      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.ready_for_pickup }}</p>
-    </div>
+    <c-stat-card label="{% trans 'Pending review' %}">{{ status_counts.pending_review }}</c-stat-card>
+    <c-stat-card label="{% trans 'Quoted' %}">{{ status_counts.quoted }}</c-stat-card>
+    <c-stat-card label="{% trans 'Paid' %}">{{ status_counts.paid }}</c-stat-card>
+    <c-stat-card label="{% trans 'In progress' %}">{{ status_counts.in_progress }}</c-stat-card>
+    <c-stat-card label="{% trans 'Ready for pickup' %}">{{ status_counts.ready_for_pickup }}</c-stat-card>
   </div>
 
   <div class="flex flex-wrap gap-2">
@@ -46,7 +31,7 @@
   </div>
 
   <div class="grid gap-4 lg:grid-cols-2">
-    <div class="page-card !p-4">
+    <c-page-card class="!p-4">
       <h2 class="mb-2 text-sm font-bold text-paper">{% trans "Latest requests" %}</h2>
       {% if recent_orders %}
         <ul class="space-y-1">
@@ -58,16 +43,16 @@
                 </a>
                 <span class="text-paper-muted"> · <bdi dir="ltr">{{ order.customer.phone }}</bdi></span>
               </span>
-              <span class="text-paper-muted">{{ order.get_status_display }}</span>
+              <span><c-status-badge status="{{ order.status }}">{{ order.get_status_display }}</c-status-badge></span>
             </li>
           {% endfor %}
         </ul>
       {% else %}
         <p class="text-xs text-paper-muted">{% trans "No requests." %}</p>
       {% endif %}
-    </div>
+    </c-page-card>
 
-    <div class="page-card !p-4">
+    <c-page-card class="!p-4">
       <h2 class="mb-2 text-sm font-bold text-paper">{% trans "Latest payments" %}</h2>
       {% if recent_payments %}
         <ul class="space-y-1">
@@ -86,7 +71,7 @@
       {% else %}
         <p class="text-xs text-paper-muted">{% trans "No payments." %}</p>
       {% endif %}
-    </div>
+    </c-page-card>
   </div>
 </section>
 {% endblock %}

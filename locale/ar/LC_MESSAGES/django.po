@@ -380,6 +380,67 @@ msgstr "ورشة"
 msgid "Chat"
 msgstr "محادثة"
 
+msgid "Skip to content"
+msgstr "تخطَّ إلى المحتوى"
+
+#: templates/shared/home.html
+msgid "Trusted workshop in Shubra"
+msgstr "ورشة موثوقة في شبرا"
+
+msgid "Trusted workshop in Shubra — car repair without the runaround."
+msgstr "ورشة كريم في شبرا — صيانة بثقة من غير لفّ ودوران."
+
+msgid "No account needed — just your mobile number."
+msgstr "من غير حساب — رقم موبايلك يكفي."
+
+msgid "How it works"
+msgstr "إزاي بتشتغل؟"
+
+msgid "Describe your car"
+msgstr "وصّف عربيتك"
+
+msgid "Message Kareem with text and an engine voice note."
+msgstr "ابعت لكريم وصف مكتوب وتسجيل صوت للموتور."
+
+msgid "Clear quote & pay"
+msgstr "عرض سعر واضح وادفع"
+
+msgid "See the price, pay online, work starts after payment."
+msgstr "شوف السعر، ادفع أونلاين، الشغل يبدأ بعد الدفع."
+
+msgid "Track & collect"
+msgstr "تابع واستلم"
+
+msgid "Follow each repair step live — come when it's ready."
+msgstr "تابع كل خطوة صيانة لايف — تعال لما العربية تبقى جاهزة."
+
+msgid "Choose your portal"
+msgstr "اختار البوابة"
+
+msgid "Chat & orders"
+msgstr "محادثة وطلبات"
+
+msgid "Requests & quotes"
+msgstr "طلبات وعروض أسعار"
+
+msgid "Trust"
+msgstr "ثقة"
+
+msgid "Clear pricing"
+msgstr "أسعار واضحة"
+
+msgid "Live updates"
+msgstr "تحديثات لايف"
+
+msgid "Shubra neighbourhood"
+msgstr "حي شبرا"
+
+msgid "Payments ready"
+msgstr "الدفع جاهز"
+
+msgid "Payments awaiting setup"
+msgstr "الدفع في انتظار الإعداد"
+
 #: templates/customer/chat.html:11
 msgid "Shubra workshop"
 msgstr "ورشة شبرا"

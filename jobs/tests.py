@@ -73,22 +73,20 @@ def _voice_file():
 
 
 @override_settings(GROQ_API_KEY='')
-class IntakeRequiresTextAndAudioTests(TestCase):
+class IntakeAcceptsTextOrAudioTests(TestCase):
     def setUp(self):
         self.customer = Customer.objects.create(phone='+201011112222')
 
-    def test_text_only_does_not_create_order(self):
+    def test_text_only_creates_order(self):
         result = process_chat_message(self.customer, 'المحرك بيعمل صوت')
-        self.assertEqual(result.route, 'incomplete_intake')
-        self.assertIsNone(result.order_id)
-        self.assertFalse(Order.objects.filter(customer=self.customer).exists())
+        self.assertEqual(result.route, 'dumb_fallback')
+        self.assertIsNotNone(result.order_id)
+        self.assertTrue(Order.objects.filter(customer=self.customer).exists())
 
-    def test_audio_then_text_creates_order(self):
-        first = process_chat_message(self.customer, '', audio=_voice_file())
-        self.assertEqual(first.route, 'incomplete_intake')
-        second = process_chat_message(self.customer, 'المحرك بيعمل صوت غريب')
-        self.assertEqual(second.route, 'dumb_fallback')
-        self.assertIsNotNone(second.order_id)
+    def test_audio_only_creates_order(self):
+        result = process_chat_message(self.customer, '', audio=_voice_file())
+        self.assertEqual(result.route, 'dumb_fallback')
+        self.assertIsNotNone(result.order_id)
 
     def test_follow_up_on_bound_order_allows_text_only(self):
         order = Order.objects.create(
@@ -197,7 +195,6 @@ class TaggerBindAndQuoteTests(TestCase):
         )
 
     def test_bind_persists_labels_and_suggested_diagnostic(self):
-        process_chat_message(self.customer, '', audio=_voice_file())
         result = process_chat_message(self.customer, 'المحرك بيعمل صوت غريب')
         self.assertEqual(result.route, 'dumb_fallback')
         order = Order.objects.get(pk=result.order_id)

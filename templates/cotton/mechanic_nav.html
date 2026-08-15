@@ -1,0 +1,32 @@
+{% load i18n %}
+<nav class="mb-5 flex items-center gap-2 overflow-x-auto border-b border-white/10 pb-2" aria-label="{% trans 'Kareem' %}">
+  <a href="{% url 'kareem-overview' %}"
+     {% if nav_active == 'overview' %}aria-current="page"{% endif %}
+     class="flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition {% if nav_active == 'overview' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-chart-line text-xs" aria-hidden="true"></i> {% trans "Overview" %}
+  </a>
+  <a href="{% url 'kareem-requests-list' %}"
+     {% if nav_active == 'requests' %}aria-current="page"{% endif %}
+     class="flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition {% if nav_active == 'requests' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-inbox text-xs" aria-hidden="true"></i> {% trans "Requests" %}
+  </a>
+  <a href="{% url 'kareem-money' %}"
+     {% if nav_active == 'money' %}aria-current="page"{% endif %}
+     class="flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition {% if nav_active == 'money' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-coins text-xs" aria-hidden="true"></i> {% trans "Payments" %}
+  </a>
+  <a href="{% url 'kareem-diagnostics-list' %}"
+     {% if nav_active == 'diagnostics' %}aria-current="page"{% endif %}
+     class="flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition {% if nav_active == 'diagnostics' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-screwdriver-wrench text-xs" aria-hidden="true"></i> {% trans "Diagnostics" %}
+  </a>
+  <a href="{% url 'kareem-labels-list' %}"
+     {% if nav_active == 'labels' %}aria-current="page"{% endif %}
+     class="flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition {% if nav_active == 'labels' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-tags text-xs" aria-hidden="true"></i> {% trans "Labels" %}
+  </a>
+  <a href="{% url 'kareem-logout' %}"
+     class="ms-auto flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-dashed border-white/20 px-3 py-2 text-sm text-paper-muted no-underline transition hover:border-copper/40 hover:text-paper">
+    <i class="fa-solid fa-right-from-bracket text-xs logout-icon" aria-hidden="true"></i> {% trans "Log out" %}
+  </a>
+</nav>

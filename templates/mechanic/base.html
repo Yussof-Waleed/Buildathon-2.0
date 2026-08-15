@@ -5,17 +5,9 @@
 {% block content %}
 <div>
   {% if nav_active %}
-    {% include "mechanic/partials/nav.html" %}
+    <c-mechanic-nav />
   {% endif %}
-  {% if messages %}
-    <ul class="mb-3 space-y-1.5">
-      {% for message in messages %}
-        <li class="rounded-lg border px-3 py-2 text-xs {% if message.tags == 'error' %}border-red-500/30 bg-red-500/10 text-red-200{% else %}border-emerald-500/30 bg-emerald-500/10 text-emerald-200{% endif %}">
-          {{ message }}
-        </li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+  <c-flash />
   {% block mechanic_content %}{% endblock %}
 </div>
 {% endblock %}

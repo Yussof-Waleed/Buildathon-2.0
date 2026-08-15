@@ -18,6 +18,8 @@ def _message_kind(body: str) -> str:
         return 'step'
     if text.startswith('__ready__'):
         return 'ready'
+    if text.startswith('__payment_failed__'):
+        return 'payment_failed'
     if text.startswith('__payment__'):
         return 'payment'
     if text.startswith('__started__'):
@@ -95,6 +97,7 @@ def _body_after_prefix(body: str) -> str:
     return (
         text.replace('__step__', '')
         .replace('__ready__', '')
+        .replace('__payment_failed__', '')
         .replace('__payment__', '')
         .replace('__started__', '')
         .replace('__completed__', '')
@@ -114,7 +117,7 @@ def piasters_egp(piasters) -> str:
     return f'{int(piasters) / 100:.2f}'
 
 
-def _message_bubble_context(message, order=None, paymob_ready=False, viewer='customer'):
+def _message_bubble_context(message, order=None, viewer='customer'):
     body = message.body or ''
     kind = _message_kind(body)
     ctx = {
@@ -122,18 +125,10 @@ def _message_bubble_context(message, order=None, paymob_ready=False, viewer='cus
         'kind': kind,
         'viewer': viewer,
         'order': order,
-        'paymob_ready': paymob_ready,
         'show_pay': (
             kind == 'quote'
             and order is not None
             and order.status == 'quoted'
-            and paymob_ready
-        ),
-        'show_pay_waiting': (
-            kind == 'quote'
-            and order is not None
-            and order.status == 'quoted'
-            and not paymob_ready
         ),
     }
     if kind == 'quote':
@@ -149,6 +144,8 @@ def _message_bubble_context(message, order=None, paymob_ready=False, viewer='cus
         ctx['text'] = _('Your car is ready for pickup — come to the workshop.')
     elif kind == 'payment':
         ctx['text'] = _('Payment confirmed — Kareem will start when he is ready.')
+    elif kind == 'payment_failed':
+        ctx['text'] = _('Payment failed — try again or message Kareem.')
     elif kind == 'started':
         ctx['text'] = _('Kareem started work on your order.')
     elif kind == 'completed':
@@ -159,13 +156,13 @@ def _message_bubble_context(message, order=None, paymob_ready=False, viewer='cus
 
 
 @register.simple_tag(takes_context=True)
-def message_bubble(context, message, order=None, paymob_ready=False, viewer='customer'):
+def message_bubble(context, message, order=None, viewer='customer'):
     # Inclusion tags copy RequestContext and crash on Python 3.14 + Django 5.1.
-    ctx = _message_bubble_context(message, order, paymob_ready, viewer)
+    ctx = _message_bubble_context(message, order, viewer)
     ctx['csrf_token'] = context.get('csrf_token')
     return mark_safe(
         render_to_string(
-            'shared/partials/message_bubble.html',
+            'cotton/message_bubble.html',
             ctx,
             request=context.get('request'),
         )

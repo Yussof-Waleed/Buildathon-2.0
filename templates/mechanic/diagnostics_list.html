@@ -4,15 +4,13 @@
 {% block title %}{% trans "Warsha" %} — {% trans "Diagnostics" %}{% endblock %}
 
 {% block mechanic_content %}
-<section class="page-card animate-fade-up">
+<c-page-card>
   <div class="flex items-center justify-between gap-2">
     <div>
       <h1 class="text-xl font-extrabold text-paper">{% trans "Diagnostics" %}</h1>
       <p class="mt-0.5 text-xs text-paper-muted">{% trans "Quote templates" %}</p>
     </div>
-    <a href="{% url 'kareem-diagnostic-create' %}" class="btn-icon btn-icon-sm no-underline" aria-label="{% trans 'New diagnostic' %}">
-      <i class="fa-solid fa-plus" aria-hidden="true"></i>
-    </a>
+    <c-btn-icon href="{% url 'kareem-diagnostic-create' %}" size="sm" icon="fa-solid fa-plus" aria-label="{% trans 'New diagnostic' %}" />
   </div>
 
   {% if diagnostics %}
@@ -63,5 +61,5 @@
   {% else %}
     <p class="mt-3 text-sm text-paper-muted">{% trans "No diagnostics." %}</p>
   {% endif %}
-</section>
+</c-page-card>
 {% endblock %}

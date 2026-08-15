@@ -50,13 +50,10 @@
           {% if show_pay %}
             <form method="post" action="{% url 'api-checkout' order_id=order.pk %}" class="msg-quote-pay">
               {% csrf_token %}
-              <button type="submit" class="btn-pill btn-pill-primary w-full justify-center">
-                <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
-                <span>{% trans "Pay" %} <bdi dir="ltr">{{ quote.price }}</bdi> {% trans "EGP" %}</span>
-              </button>
+              <c-btn-pill variant="primary" type="submit" icon="fa-solid fa-lock text-xs" class="w-full justify-center">
+                {% trans "Pay" %} <bdi dir="ltr">{{ quote.price }}</bdi> {% trans "EGP" %}
+              </c-btn-pill>
             </form>
-          {% elif show_pay_waiting %}
-            <p class="msg-quote-waiting">{% trans "Paymob checkout — waiting for account keys" %}</p>
           {% endif %}
         </div>
       {% elif kind == 'step' %}
@@ -72,6 +69,11 @@
       {% elif kind == 'payment' %}
         <p class="msg-payment-banner">
           <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
+          {{ text }}
+        </p>
+      {% elif kind == 'payment_failed' %}
+        <p class="msg-payment-banner msg-payment-banner-failed">
+          <i class="fa-solid fa-circle-xmark text-red-300" aria-hidden="true"></i>
           {{ text }}
         </p>
       {% elif kind == 'started' %}

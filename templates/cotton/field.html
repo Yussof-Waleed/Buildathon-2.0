@@ -1,0 +1,7 @@
+<c-vars label="" for_id="" class="" />
+<div class="{{ class }}" {{ attrs }}>
+  {% if label %}
+    <label {% if for_id %}for="{{ for_id }}"{% endif %} class="text-xs text-paper-muted">{{ label }}</label>
+  {% endif %}
+  {{ slot }}
+</div>

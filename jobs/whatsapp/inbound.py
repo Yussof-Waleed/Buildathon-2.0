@@ -1,8 +1,7 @@
 import logging
 import threading
-from pathlib import Path
+import re
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import close_old_connections, IntegrityError
@@ -37,14 +36,9 @@ def _download_audio(msg: wa_types.Message) -> ContentFile | None:
     if not (msg.voice or msg.audio):
         return None
 
-    media_root = Path(settings.MEDIA_ROOT)
-    tmp_dir = media_root / 'tmp_wa'
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    destination = tmp_dir / f'{msg.id}.ogg'
-    downloaded = Path(msg.download_media(filepath=str(destination)))
-    data = downloaded.read_bytes()
-    downloaded.unlink(missing_ok=True)
-    return ContentFile(data, name=f'{msg.id}.ogg')
+    data = msg.get_media_bytes()
+    safe_id = re.sub(r'[^A-Za-z0-9_-]+', '_', msg.id)[:80]
+    return ContentFile(data, name=f'{safe_id}.ogg')
 
 
 def _reply_text(result: ProcessChatResult) -> str:
@@ -129,7 +123,7 @@ def process_inbound_message(msg: wa_types.Message) -> None:
     ).first()
     if stored:
         conversation = stored.conversation
-        if result.route == 'irrelevant' or result.route == 'incomplete_intake':
+        if result.route == 'irrelevant':
             mechanic_reply = (
                 conversation.messages.filter(
                     author_type=Message.AuthorType.MECHANIC,
