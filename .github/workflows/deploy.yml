@@ -40,8 +40,6 @@ jobs:
                '.venv/*' \
                '.cursor/*' \
                '.ebignore' \
-               '.dockerignore' \
-               'Dockerfile' \
                'README.md' \
                'db.sqlite3' \
                'staticfiles/*' \

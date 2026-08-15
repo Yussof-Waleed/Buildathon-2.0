@@ -10,6 +10,4 @@ db.sqlite3
 staticfiles
 .env
 .env.*
-Dockerfile
-.dockerignore
 README.md
