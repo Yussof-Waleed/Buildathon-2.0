@@ -22,6 +22,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,6 +34,8 @@ jobs:
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+          role-skip-session-tagging: true
 
       - name: Package application
         run: |
