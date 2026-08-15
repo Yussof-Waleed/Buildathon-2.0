@@ -1,0 +1,70 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-elastic-beanstalk
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: eu-north-1
+  AWS_ROLE_ARN: arn:aws:iam::434779526440:role/github-actions-buildathon2-deploy
+  EB_APPLICATION: buildathon2
+  EB_ENVIRONMENT: buildathon2-env
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Package application
+        run: |
+          zip -r deploy.zip . \
+            -x '.git/*' \
+               '.github/*' \
+               '.venv/*' \
+               '.cursor/*' \
+               '.ebignore' \
+               '.dockerignore' \
+               'Dockerfile' \
+               'README.md' \
+               'db.sqlite3' \
+               'staticfiles/*' \
+               '.env' \
+               '.env.*' \
+               '*.pyc' \
+               '*__pycache__*' \
+               '.DS_Store'
+
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          set -euo pipefail
+          BUCKET="$(aws elasticbeanstalk create-storage-location --query S3Bucket --output text)"
+          VERSION="app-$(git rev-parse --short HEAD)-${GITHUB_RUN_NUMBER}"
+          KEY="${EB_APPLICATION}/${VERSION}.zip"
+          aws s3 cp deploy.zip "s3://${BUCKET}/${KEY}"
+          aws elasticbeanstalk create-application-version \
+            --application-name "${EB_APPLICATION}" \
+            --version-label "${VERSION}" \
+            --description "GitHub Actions ${GITHUB_SHA}" \
+            --source-bundle "S3Bucket=${BUCKET},S3Key=${KEY}"
+          aws elasticbeanstalk update-environment \
+            --application-name "${EB_APPLICATION}" \
+            --environment-name "${EB_ENVIRONMENT}" \
+            --version-label "${VERSION}"
+          echo "Deployed ${VERSION} to ${EB_ENVIRONMENT}"
