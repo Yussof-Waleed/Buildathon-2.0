@@ -2,6 +2,8 @@
 
 Hackathon project built for **Buildathon 2.0**, organized by [Cursor Egypt](https://www.cursor.com/) and [Paymob](https://paymob.com/).
 
+**Product & engineering contract:** see [AGENTS.md](AGENTS.md) — Warsha (ورشة), the neighbourhood garage OS.
+
 This repo is a Django + Django REST Framework backend, starting from a fresh project scaffold.
 
 ## Stack
