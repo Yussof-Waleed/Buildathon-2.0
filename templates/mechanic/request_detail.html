@@ -111,11 +111,26 @@
       </summary>
       <form method="post" action="{% url 'kareem-request-quote' order_id=order.pk %}" class="flex flex-col gap-2 border-t border-white/10 p-3">
         {% csrf_token %}
+        {% if order.suggested_diagnostic %}
+          <p class="rounded-lg border border-copper/30 bg-copper/10 px-3 py-2 text-sm text-paper">
+            <span class="text-xs font-semibold uppercase tracking-wide text-copper-bright">{% trans "Suggested" %}</span>
+            <span class="mt-0.5 block font-bold">{{ order.suggested_diagnostic.localized_title }}</span>
+            <span class="text-xs text-paper-muted">
+              <bdi dir="ltr">{{ order.suggested_diagnostic.price }}</bdi> {% trans "EGP" %}
+              · {% trans "Confirm below or choose another." %}
+            </span>
+          </p>
+        {% endif %}
         <label for="diagnostic_id" class="text-xs text-paper-muted">{% trans "Diagnostic" %}</label>
         <select id="diagnostic_id" name="diagnostic_id" required class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
           <option value="">{% trans "— Choose —" %}</option>
           {% for diagnostic in diagnostics %}
-            <option value="{{ diagnostic.pk }}">{{ diagnostic.localized_title }} — {{ diagnostic.price }} {% trans "EGP" %}</option>
+            <option
+              value="{{ diagnostic.pk }}"
+              {% if order.suggested_diagnostic_id == diagnostic.pk %}selected{% endif %}
+            >
+              {{ diagnostic.localized_title }} — {{ diagnostic.price }} {% trans "EGP" %}{% if order.suggested_diagnostic_id == diagnostic.pk %} — {% trans "suggested" %}{% endif %}
+            </option>
           {% endfor %}
         </select>
         <label for="kareem_note" class="text-xs text-paper-muted">{% trans "Note (optional)" %}</label>

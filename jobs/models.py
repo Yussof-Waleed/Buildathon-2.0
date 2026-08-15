@@ -36,6 +36,14 @@ class Order(models.Model):
         related_name='orders',
         help_text='Source template used at quote time',
     )
+    suggested_diagnostic = models.ForeignKey(
+        Diagnostic,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='suggested_orders',
+        help_text='Tagger suggestion for Kareem to confirm or override at quote time',
+    )
     quoted_title_ar = models.CharField(max_length=200, blank=True)
     quoted_title_en = models.CharField(max_length=200, blank=True)
     quoted_price = models.DecimalField(

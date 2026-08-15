@@ -331,22 +331,29 @@ def _intake_order_link_body(order_id: int, prefix: str) -> str:
     return f'[order:{order_id}] {prefix}'
 
 
+def _apply_tagger(order: Order, labeler_text: str) -> None:
+    from ai.tagger import suggest_from_db
+
+    result = suggest_from_db(labeler_text)
+    if result.label_ids:
+        order.labels.set(result.label_ids)
+    if result.diagnostic_id:
+        order.suggested_diagnostic_id = result.diagnostic_id
+        order.save(update_fields=['suggested_diagnostic_id'])
+
+
 def _bind_conversation_to_new_order(
     conversation: Conversation,
     customer: Customer,
     labeler_text: str,
 ) -> Order:
-    from ai.tagger import suggest_labels_from_db
-
     order = Order.objects.create(
         customer=customer,
         status=Order.Status.PENDING_REVIEW,
     )
     conversation.order = order
     conversation.save(update_fields=['order'])
-    label_ids = suggest_labels_from_db(labeler_text)
-    if label_ids:
-        order.labels.set(label_ids)
+    _apply_tagger(order, labeler_text)
     return order
 
 
@@ -356,8 +363,6 @@ def _fork_conversation_for_new_order(
     customer: Customer,
     labeler_text: str,
 ) -> Order:
-    from ai.tagger import suggest_labels_from_db
-
     order = Order.objects.create(
         customer=customer,
         status=Order.Status.PENDING_REVIEW,
@@ -375,9 +380,7 @@ def _fork_conversation_for_new_order(
         body=_intake_order_link_body(order.pk, 'تم فتح طلب جديد من المحادثة دي'),
         channel=Message.Channel.WEB,
     )
-    label_ids = suggest_labels_from_db(labeler_text)
-    if label_ids:
-        order.labels.set(label_ids)
+    _apply_tagger(order, labeler_text)
     return order
 
 

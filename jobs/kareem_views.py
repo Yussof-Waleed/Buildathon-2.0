@@ -144,7 +144,11 @@ def kareem_requests_list(request):
 @staff_required
 def kareem_request_detail(request, order_id):
     order = get_object_or_404(
-        Order.objects.select_related('customer', 'diagnostic').prefetch_related(
+        Order.objects.select_related(
+            'customer',
+            'diagnostic',
+            'suggested_diagnostic',
+        ).prefetch_related(
             'steps',
             'labels',
             'conversation__messages',

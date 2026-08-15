@@ -36,6 +36,7 @@ class OrderAdmin(admin.ModelAdmin):
         'status',
         'quoted_price',
         'diagnostic',
+        'suggested_diagnostic',
         'created_at',
     )
     list_filter = ('status', 'labels')
