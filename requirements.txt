@@ -2,6 +2,8 @@ asgiref==3.12.1
 Django==6.1
 django-rest-framework==0.1.0
 djangorestframework==3.18.0
+dj-database-url==3.1.2
 gunicorn==23.0.0
+psycopg[binary]==3.3.4
 sqlparse==0.6.0
 whitenoise==6.9.0
