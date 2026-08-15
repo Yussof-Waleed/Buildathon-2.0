@@ -3,8 +3,6 @@
 {% trans "Your message" as default_aria %}
 {% trans "Audio recording is not available in this browser." as audio_unavailable %}
 {% trans "Could not access the microphone. Allow microphone access in your browser settings." as mic_denied %}
-{% trans "Write a short description first, then record the voice note." as need_text_before_voice %}
-{% trans "Send a written description and a voice note of the problem." as need_text_and_voice %}
 {% csrf_token %}
 <input type="file" name="audio" id="audio-input" class="hidden" accept="audio/webm,audio/mp4,audio/ogg">
 
@@ -68,10 +66,6 @@
 
     const audioUnavailable = '{{ audio_unavailable|escapejs }}';
     const micDenied = '{{ mic_denied|escapejs }}';
-    const needTextBeforeVoice = '{{ need_text_before_voice|escapejs }}';
-    const needTextAndVoice = '{{ need_text_and_voice|escapejs }}';
-    const requireTextAndAudio = form.dataset.requireTextAndAudio === 'true';
-
     if (!form || !micBtn) return;
 
     let mediaRecorder = null;
@@ -241,10 +235,6 @@
     });
 
     recordSendBtn.addEventListener('click', () => {
-      if (requireTextAndAudio && !(bodyInput && bodyInput.value.trim())) {
-        alert(needTextBeforeVoice);
-        return;
-      }
       shouldSubmit = true;
       stopRecording(true);
     });
@@ -256,14 +246,6 @@
       }
       const hasText = bodyInput.value.trim().length > 0;
       const hasAudio = audioInput.files.length > 0;
-      if (requireTextAndAudio) {
-        if (!hasText || !hasAudio) {
-          e.preventDefault();
-          alert(needTextAndVoice);
-          if (!hasText) bodyInput.focus();
-        }
-        return;
-      }
       if (!hasText && !hasAudio) {
         e.preventDefault();
         bodyInput.focus();

@@ -16,7 +16,7 @@
   <div class="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
     {% if not thread_messages %}
       <div class="max-w-[88%] self-center rounded-xl border border-dashed border-copper/30 bg-copper/10 px-4 py-3 text-center text-sm text-paper-muted">
-        <p class="m-0">{% trans "Describe the problem in writing and record a voice note of the engine." %}</p>
+        <p class="m-0">{% trans "Describe the problem in writing or record a voice note." %}</p>
       </div>
     {% endif %}
 
@@ -40,7 +40,7 @@
   </div>
 
   <div class="border-t border-white/10 bg-garage-950/95 px-4 py-3 backdrop-blur-xl">
-    <form id="chat-form" method="post" enctype="multipart/form-data" class="flex flex-col gap-2" data-require-text-and-audio="true">
+    <form id="chat-form" method="post" enctype="multipart/form-data" class="flex flex-col gap-2">
       {% trans "Example: the engine makes a strange noise when I turn on the A/C" as composer_placeholder %}
       {% trans "Your message" as composer_aria %}
       {% include "shared/partials/chat_composer.html" with composer_placeholder=composer_placeholder composer_aria=composer_aria %}

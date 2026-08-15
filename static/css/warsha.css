@@ -408,6 +408,10 @@ body > main {
   color: #8ef0b8;
 }
 
+.msg-payment-banner-failed {
+  color: #f0a8a8;
+}
+
 .msg-order-link {
   display: inline-block;
   margin-inline-start: 0.375rem;
