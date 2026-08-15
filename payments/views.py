@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.contrib import messages
 from django.utils.translation import gettext as _
@@ -11,11 +12,16 @@ from accounts.customer_session import get_customer, require_customer
 from jobs.models import Order
 from payments.hmac import verify_transaction_hmac
 from payments.services import (
+    CALLBACK_FAILED,
+    CALLBACK_PAID,
     apply_failed_payment,
     apply_successful_payment,
+    classify_paymob_callback,
     ensure_checkout_url,
     extract_order_id_from_callback,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @require_customer
@@ -46,35 +52,47 @@ def paymob_webhook(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return HttpResponseBadRequest('Invalid JSON')
 
+    callback_type = payload.get('type')
+    if callback_type and str(callback_type).upper() != 'TRANSACTION':
+        logger.info('Ignoring non-transaction Paymob callback type=%s', callback_type)
+        return HttpResponse(status=200)
+
     obj = payload.get('obj')
-    if not obj:
+    if not isinstance(obj, dict) or not obj:
         return HttpResponseBadRequest('Missing obj')
 
     if not verify_transaction_hmac(obj, received_hmac):
         return HttpResponseBadRequest('Invalid HMAC')
 
+    outcome = classify_paymob_callback(obj)
+    transaction_id = str(obj.get('id', ''))
+
+    if outcome not in (CALLBACK_PAID, CALLBACK_FAILED):
+        logger.info(
+            'Paymob callback acknowledged without state change: outcome=%s txn=%s',
+            outcome,
+            transaction_id,
+        )
+        return HttpResponse(status=200)
+
+    if not transaction_id:
+        return HttpResponseBadRequest('Missing transaction id')
+
     order_id = extract_order_id_from_callback(obj)
     if order_id is None:
         return HttpResponseBadRequest('Missing order reference')
 
-    transaction_id = str(obj.get('id', ''))
-    if not transaction_id:
-        return HttpResponseBadRequest('Missing transaction id')
-
     amount_piasters = int(obj.get('amount_cents') or 0)
     intention_id = str(obj.get('payment_key_claims', {}).get('integration_id', '') or '')
 
-    success = obj.get('success') is True
-    pending = obj.get('pending') is True
-
-    if success and not pending:
+    if outcome == CALLBACK_PAID:
         apply_successful_payment(
             order_id,
             transaction_id,
             amount_piasters,
             intention_id=intention_id,
         )
-    elif not success:
+    else:
         apply_failed_payment(
             order_id,
             transaction_id,

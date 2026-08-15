@@ -73,7 +73,7 @@ def _voice_file():
 
 
 @override_settings(GROQ_API_KEY='')
-class IntakeAllowsTextOrAudioTests(TestCase):
+class IntakeAcceptsTextOrAudioTests(TestCase):
     def setUp(self):
         self.customer = Customer.objects.create(phone='+201011112222')
 

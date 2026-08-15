@@ -14,14 +14,8 @@ def _field_to_str(value) -> str:
     return str(value)
 
 
-def verify_transaction_hmac(obj: dict, received_hmac: str) -> bool:
-    """
-    Verify POST webhook HMAC from body.obj.
-    Field order per Paymob Transaction Processed callback spec.
-    """
-    if not received_hmac or not settings.PAYMOB_HMAC_SECRET:
-        return False
-
+def compute_transaction_hmac(obj: dict) -> str:
+    """HMAC-SHA-512 hex digest for a Transaction Processed `obj`."""
     source_data = obj.get('source_data') or {}
     order = obj.get('order') or {}
 
@@ -49,10 +43,20 @@ def verify_transaction_hmac(obj: dict, received_hmac: str) -> bool:
     ]
 
     concat = ''.join(_field_to_str(field) for field in fields)
-    computed = hmac.new(
+    return hmac.new(
         settings.PAYMOB_HMAC_SECRET.encode('utf-8'),
         concat.encode('utf-8'),
         hashlib.sha512,
     ).hexdigest()
 
+
+def verify_transaction_hmac(obj: dict, received_hmac: str) -> bool:
+    """
+    Verify POST webhook HMAC from body.obj.
+    Field order per Paymob Transaction Processed callback spec.
+    """
+    if not received_hmac or not settings.PAYMOB_HMAC_SECRET:
+        return False
+
+    computed = compute_transaction_hmac(obj)
     return hmac.compare_digest(computed, received_hmac.lower())

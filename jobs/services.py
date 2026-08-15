@@ -30,7 +30,7 @@ OPEN_ORDER_STATUSES = (
     Order.Status.READY_FOR_PICKUP,
 )
 
-Route = Literal['new_request', 'existing_order', 'irrelevant', 'dumb_fallback', 'incomplete_intake']
+Route = Literal['new_request', 'existing_order', 'irrelevant', 'dumb_fallback']
 
 
 @dataclass
@@ -404,21 +404,6 @@ def post_mechanic_message(order: Order, body: str, audio=None) -> Message:
     return message
 
 
-def _customer_intake_parts(conversation: Conversation) -> tuple[bool, bool]:
-    customer_messages = conversation.messages.filter(
-        author_type=Message.AuthorType.CUSTOMER,
-    )
-    has_text = customer_messages.exclude(body='').exists()
-    has_audio = any(bool(message.audio) for message in customer_messages)
-    return has_text, has_audio
-
-
-def _intake_incomplete_prompt(has_text: bool, has_audio: bool) -> str | None:
-    if has_text or has_audio:
-        return None
-    return _('ابعت وصف مكتوب أو تسجيل صوتي للمشكلة.')
-
-
 def _labeler_text_for_intake(conversation: Conversation) -> str:
     from ai.labeler import AUDIO_PLACEHOLDER
     from ai.stt import looks_like_speech, transcribe_audio
@@ -440,25 +425,6 @@ def _labeler_text_for_intake(conversation: Conversation) -> str:
             message.save(update_fields=['body'])
         texts.append(transcript)
     return '\n'.join(texts) or AUDIO_PLACEHOLDER
-
-
-def _maybe_prompt_incomplete_intake(
-    conversation: Conversation,
-    channel: str = Message.Channel.WEB,
-) -> str | None:
-    if conversation.order_id:
-        return None
-    has_text, has_audio = _customer_intake_parts(conversation)
-    prompt = _intake_incomplete_prompt(has_text, has_audio)
-    if not prompt:
-        return None
-    Message.objects.create(
-        conversation=conversation,
-        author_type=Message.AuthorType.MECHANIC,
-        body=prompt,
-        channel=channel,
-    )
-    return prompt
 
 
 def _labeler_text_for_message(customer_message: Message, body: str) -> str:
@@ -509,9 +475,6 @@ def process_chat_message(
         channel=channel,
         wa_message_id=wa_message_id,
     )
-
-    if _maybe_prompt_incomplete_intake(conversation, channel=channel):
-        return ProcessChatResult(route='incomplete_intake')
 
     if not is_llm_configured():
         if conversation.order_id:

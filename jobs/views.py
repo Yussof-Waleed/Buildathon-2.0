@@ -82,8 +82,7 @@ def customer_home(request):
             )
 
         try:
-            if audio:
-                validate_audio_upload(audio)
+            validate_audio_upload(audio)
         except ValidationError as exc:
             return render(
                 request,

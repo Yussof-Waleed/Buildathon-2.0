@@ -9,6 +9,49 @@ from payments.models import Payment
 
 logger = logging.getLogger(__name__)
 
+CALLBACK_PAID = 'paid'
+CALLBACK_FAILED = 'failed'
+CALLBACK_PENDING = 'pending'
+CALLBACK_VOIDED = 'voided'
+CALLBACK_REFUNDED = 'refunded'
+CALLBACK_AUTH_HOLD = 'auth_hold'
+CALLBACK_IGNORED = 'ignored'
+
+
+def _flag(obj: dict, key: str) -> bool:
+    return obj.get(key) is True
+
+
+def classify_paymob_callback(obj: dict) -> str:
+    """
+    Map Paymob transaction flags to a checkout outcome.
+
+    Only a completed standalone (or captured) success becomes paid.
+    Pending, refund, void, and auth-hold are acknowledged without
+    changing the order. True declines become failed.
+    """
+    pending = _flag(obj, 'pending')
+    success = _flag(obj, 'success')
+    error_occured = _flag(obj, 'error_occured')
+    is_voided = _flag(obj, 'is_voided')
+    is_refunded = _flag(obj, 'is_refunded')
+    is_auth = _flag(obj, 'is_auth')
+    is_capture = _flag(obj, 'is_capture')
+
+    if pending:
+        return CALLBACK_PENDING
+    if is_voided:
+        return CALLBACK_VOIDED
+    if is_refunded:
+        return CALLBACK_REFUNDED
+    if is_auth and not is_capture:
+        return CALLBACK_AUTH_HOLD
+    if success and not error_occured:
+        return CALLBACK_PAID
+    if not success:
+        return CALLBACK_FAILED
+    return CALLBACK_IGNORED
+
 
 def _ensure_conversation(order: Order) -> Conversation:
     try:
@@ -43,14 +86,35 @@ def apply_successful_payment(
         if order.status != Order.Status.QUOTED:
             return False
 
+        pending = (
+            Payment.objects.filter(order=order, status=Payment.Status.PENDING)
+            .order_by('-created_at')
+            .first()
+        )
         try:
-            Payment.objects.create(
-                order=order,
-                amount_piasters=amount_piasters,
-                status=Payment.Status.PAID,
-                paymob_intention_id=intention_id,
-                paymob_transaction_id=paymob_transaction_id,
-            )
+            if pending:
+                pending.status = Payment.Status.PAID
+                pending.amount_piasters = amount_piasters
+                pending.paymob_transaction_id = paymob_transaction_id
+                if intention_id:
+                    pending.paymob_intention_id = intention_id
+                pending.save(
+                    update_fields=[
+                        'status',
+                        'amount_piasters',
+                        'paymob_transaction_id',
+                        'paymob_intention_id',
+                        'updated_at',
+                    ]
+                )
+            else:
+                Payment.objects.create(
+                    order=order,
+                    amount_piasters=amount_piasters,
+                    status=Payment.Status.PAID,
+                    paymob_intention_id=intention_id,
+                    paymob_transaction_id=paymob_transaction_id,
+                )
         except IntegrityError:
             return True
 
@@ -118,7 +182,7 @@ def apply_failed_payment(
             Message.objects.create(
                 conversation=conversation,
                 author_type=Message.AuthorType.MECHANIC,
-                body='فشل الدفع — جرّب مرة أخرى أو تواصل مع كريم.',
+                body='__payment_failed__',
                 channel=Message.Channel.WEB,
             )
 
