@@ -10,9 +10,10 @@
     <p class="mt-0.5 text-xs text-paper-muted">{% trans "Kareem's board" %}</p>
   </div>
 
-  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
     <c-stat-card label="{% trans 'Pending review' %}">{{ status_counts.pending_review }}</c-stat-card>
     <c-stat-card label="{% trans 'Quoted' %}">{{ status_counts.quoted }}</c-stat-card>
+    <c-stat-card label="{% trans 'Paid' %}">{{ status_counts.paid }}</c-stat-card>
     <c-stat-card label="{% trans 'In progress' %}">{{ status_counts.in_progress }}</c-stat-card>
     <c-stat-card label="{% trans 'Ready for pickup' %}">{{ status_counts.ready_for_pickup }}</c-stat-card>
   </div>

@@ -17,6 +17,7 @@ from jobs.whatsapp.events import (
     notify_quote,
     notify_ready,
     notify_step_done,
+    notify_work_started,
 )
 
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
@@ -24,6 +25,7 @@ MAX_AUDIO_BYTES = 10 * 1024 * 1024
 OPEN_ORDER_STATUSES = (
     Order.Status.PENDING_REVIEW,
     Order.Status.QUOTED,
+    Order.Status.PAID,
     Order.Status.IN_PROGRESS,
     Order.Status.READY_FOR_PICKUP,
 )
@@ -169,6 +171,25 @@ def snapshot_diagnostic_on_order(
     return order
 
 
+def start_order_work(order: Order) -> Order:
+    """Kareem starts the job after payment — quoted/paid never auto-start."""
+    if order.status != Order.Status.PAID:
+        return order
+
+    order.status = Order.Status.IN_PROGRESS
+    order.save(update_fields=['status', 'updated_at'])
+
+    conversation = _ensure_conversation(order)
+    Message.objects.create(
+        conversation=conversation,
+        author_type=Message.AuthorType.MECHANIC,
+        body='__started__',
+        channel=Message.Channel.WEB,
+    )
+    notify_work_started(order)
+    return order
+
+
 def complete_order_step(order: Order, step_id: int) -> Order:
     """Mark one step done; auto ready_for_pickup when all steps complete."""
     if order.status != Order.Status.IN_PROGRESS:
@@ -310,22 +331,29 @@ def _intake_order_link_body(order_id: int, prefix: str) -> str:
     return f'[order:{order_id}] {prefix}'
 
 
+def _apply_tagger(order: Order, labeler_text: str) -> None:
+    from ai.tagger import suggest_from_db
+
+    result = suggest_from_db(labeler_text)
+    if result.label_ids:
+        order.labels.set(result.label_ids)
+    if result.diagnostic_id:
+        order.suggested_diagnostic_id = result.diagnostic_id
+        order.save(update_fields=['suggested_diagnostic_id'])
+
+
 def _bind_conversation_to_new_order(
     conversation: Conversation,
     customer: Customer,
     labeler_text: str,
 ) -> Order:
-    from ai.tagger import suggest_labels_from_db
-
     order = Order.objects.create(
         customer=customer,
         status=Order.Status.PENDING_REVIEW,
     )
     conversation.order = order
     conversation.save(update_fields=['order'])
-    label_ids = suggest_labels_from_db(labeler_text)
-    if label_ids:
-        order.labels.set(label_ids)
+    _apply_tagger(order, labeler_text)
     return order
 
 
@@ -335,8 +363,6 @@ def _fork_conversation_for_new_order(
     customer: Customer,
     labeler_text: str,
 ) -> Order:
-    from ai.tagger import suggest_labels_from_db
-
     order = Order.objects.create(
         customer=customer,
         status=Order.Status.PENDING_REVIEW,
@@ -354,9 +380,7 @@ def _fork_conversation_for_new_order(
         body=_intake_order_link_body(order.pk, 'تم فتح طلب جديد من المحادثة دي'),
         channel=Message.Channel.WEB,
     )
-    label_ids = suggest_labels_from_db(labeler_text)
-    if label_ids:
-        order.labels.set(label_ids)
+    _apply_tagger(order, labeler_text)
     return order
 
 

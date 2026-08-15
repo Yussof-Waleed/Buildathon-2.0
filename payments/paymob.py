@@ -1,13 +1,19 @@
 """Paymob Intention API client."""
 
 import json
+import ssl
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+import certifi
 from django.conf import settings
 
 from jobs.services import piasters_from_egp
 from payments.paymob_config import get_paymob_readiness
+
+
+def _ssl_context() -> ssl.SSLContext:
+    return ssl.create_default_context(cafile=certifi.where())
 
 
 class PaymobNotConfiguredError(Exception):
@@ -90,7 +96,7 @@ def create_payment_intention(order) -> tuple[str, str]:
     )
 
     try:
-        with urlopen(request, timeout=30) as response:
+        with urlopen(request, timeout=30, context=_ssl_context()) as response:
             data = json.loads(response.read().decode('utf-8'))
     except HTTPError as exc:
         error_body = exc.read().decode('utf-8', errors='replace')

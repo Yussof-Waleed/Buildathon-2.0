@@ -10,6 +10,7 @@ class Order(models.Model):
     class Status(models.TextChoices):
         PENDING_REVIEW = 'pending_review', _('Pending review')
         QUOTED = 'quoted', _('Quoted')
+        PAID = 'paid', _('Paid')
         IN_PROGRESS = 'in_progress', _('In progress')
         READY_FOR_PICKUP = 'ready_for_pickup', _('Ready for pickup')
         COMPLETED = 'completed', _('Completed')
@@ -34,6 +35,14 @@ class Order(models.Model):
         blank=True,
         related_name='orders',
         help_text='Source template used at quote time',
+    )
+    suggested_diagnostic = models.ForeignKey(
+        Diagnostic,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='suggested_orders',
+        help_text='Tagger suggestion for Kareem to confirm or override at quote time',
     )
     quoted_title_ar = models.CharField(max_length=200, blank=True)
     quoted_title_en = models.CharField(max_length=200, blank=True)

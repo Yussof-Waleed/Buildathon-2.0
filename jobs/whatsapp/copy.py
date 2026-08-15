@@ -70,6 +70,8 @@ def progress_whatsapp_text(order: Order, checkout_url: str | None = None) -> str
                 _('ادفع من صفحة الطلب:'),
                 f'{settings.SITE_URL}/orders/{order.pk}/',
             ])
+    elif order.status == Order.Status.PAID:
+        lines.extend(['', _('تم الدفع — كريم هيبدأ الشغل لما يكون جاهز.')])
     elif order.status == Order.Status.READY_FOR_PICKUP:
         lines.extend(['', _('العربية جاهزة للاستلام — تقدر تيجي الورشة.')])
     elif order.status == Order.Status.PENDING_REVIEW:
@@ -97,7 +99,17 @@ def ready_whatsapp_text(order: Order) -> str:
 
 def paid_whatsapp_text(order: Order) -> str:
     return '\n'.join([
-        _('تم تأكيد الدفع — بدأنا الشغل على طلب رقم %(id)s') % {'id': order.pk},
+        _('تم تأكيد الدفع — كريم هيبدأ الشغل على طلب رقم %(id)s لما يكون جاهز') % {
+            'id': order.pk,
+        },
+        '',
+        _steps_block(order),
+    ])
+
+
+def work_started_whatsapp_text(order: Order) -> str:
+    return '\n'.join([
+        _('كريم بدأ الشغل على طلب رقم %(id)s') % {'id': order.pk},
         '',
         _steps_block(order),
     ])

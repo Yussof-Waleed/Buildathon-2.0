@@ -18,6 +18,7 @@ from payments.paymob_config import get_paymob_readiness
 ACTIVE_POLL_STATUSES = frozenset({
     Order.Status.PENDING_REVIEW,
     Order.Status.QUOTED,
+    Order.Status.PAID,
     Order.Status.IN_PROGRESS,
     Order.Status.READY_FOR_PICKUP,
 })

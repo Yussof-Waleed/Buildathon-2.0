@@ -122,6 +122,7 @@ button:disabled,
 
 .status-pending_review { background: rgba(232, 184, 74, 0.18); color: #f0d36a; }
 .status-quoted { background: rgba(232, 160, 102, 0.16); color: #e8a066; }
+.status-paid { background: rgba(76, 175, 130, 0.18); color: #7dcea0; }
 .status-in_progress { background: rgba(76, 175, 130, 0.18); color: #8ef0b8; }
 .status-ready_for_pickup { background: rgba(76, 175, 130, 0.32); color: #b6f5d0; }
 .status-completed { background: rgba(255, 255, 255, 0.1); color: #c4bbb0; }

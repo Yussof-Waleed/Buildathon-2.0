@@ -40,6 +40,12 @@
       </c-alert>
     {% endif %}
 
+    {% if order.status == 'paid' %}
+      <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <i class="fa-solid fa-circle-check me-1.5"></i>{% trans "Payment confirmed — Kareem will start when he is ready." %}
+      </div>
+    {% endif %}
+
     {% if order.status == 'ready_for_pickup' %}
       <c-alert type="success">
         <i class="fa-solid fa-car-side me-1.5 text-copper-bright"></i>{% trans "Your car is ready for pickup — come to the workshop." %}

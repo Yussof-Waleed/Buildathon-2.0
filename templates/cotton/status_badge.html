@@ -2,6 +2,7 @@
 <span class="status-badge status-{{ status }}">
   {% if status == 'pending_review' %}<i class="fa-solid fa-clock" aria-hidden="true"></i>
   {% elif status == 'quoted' %}<i class="fa-solid fa-tag" aria-hidden="true"></i>
+  {% elif status == 'paid' %}<i class="fa-solid fa-coins" aria-hidden="true"></i>
   {% elif status == 'in_progress' %}<i class="fa-solid fa-wrench" aria-hidden="true"></i>
   {% elif status == 'ready_for_pickup' %}<i class="fa-solid fa-car-side" aria-hidden="true"></i>
   {% elif status == 'completed' %}<i class="fa-solid fa-circle-check" aria-hidden="true"></i>

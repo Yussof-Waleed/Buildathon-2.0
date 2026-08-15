@@ -175,8 +175,9 @@ stateDiagram-v2
   pending_review --> quoted: Kareem attaches diagnostic
   pending_review --> cancelled: Kareem or customer
   quoted --> cancelled: customer declines
-  quoted --> in_progress: Paymob webhook success
+  quoted --> paid: Paymob webhook success
   quoted --> quoted: payment failed
+  paid --> in_progress: Kareem starts work
   in_progress --> ready_for_pickup: all steps done or instant complete
   ready_for_pickup --> completed: car collected
 ```
@@ -187,16 +188,17 @@ stateDiagram-v2
 |--------|---------|
 | `pending_review` | Customer submitted; Kareem has not quoted |
 | `quoted` | Diagnostic attached; awaiting payment or cancel |
-| `in_progress` | Payment verified; work underway |
+| `paid` | Payment verified; waiting for Kareem to start |
+| `in_progress` | Kareem started work |
 | `ready_for_pickup` | All steps done; customer should come |
 | `completed` | Car collected (optional terminal state) |
 | `cancelled` | Closed without completion |
 
 ### Transition rules
 
-1. **No work before payment.** Kareem cannot complete steps until `in_progress`. Only HMAC-verified webhook moves `quoted` → `in_progress`.
+1. **No work before payment.** HMAC-verified webhook (or Kareem's dev confirm) moves `quoted` → `paid` only. Kareem's **Start work** button moves `paid` → `in_progress`. Steps cannot be completed until `in_progress`.
 2. **Redirect is not truth.** Paymob return URL updates UI only. Never mark paid from query params.
-3. **Quoted state** exposes checkout link + cancel to customer. System message includes diagnostic summary, Kareem's note, pay or cancel actions.
+3. **Quoted state** exposes checkout link + cancel to customer. After `paid`, hide pay/cancel; wait for Kareem to start.
 4. **Status copy** is bilingual in UI. Enum values stay English snake_case in code and DB.
 
 ---
@@ -231,7 +233,7 @@ Output: one of:
 
 Do **not** copy the same customer message onto a second conversation. One chat becomes the order thread.
 
-"Open" = this customer's orders in `pending_review`, `quoted`, `in_progress`, or `ready_for_pickup`.
+"Open" = this customer's orders in `pending_review`, `quoted`, `paid`, `in_progress`, or `ready_for_pickup`.
 
 Both customer and Kareem send free-form messages on the dedicated order chat. Labeler runs on **customer** sends only.
 
@@ -276,7 +278,7 @@ Full integration spec: [`.cursor/skills/paymob/SKILL.md`](.cursor/skills/paymob/
 - HMAC-SHA-512, field order from skill's `hmac-verification.md`
 - **Fail closed** — reject before any DB write if HMAC mismatches
 - **Idempotent** — unique constraint on Paymob `obj.id`
-- On success: `quoted` → `in_progress`, notify Kareem
+- On success: `quoted` → `paid`, notify Kareem; work does **not** start yet
 - CSRF-exempt on webhook view only
 
 ### Dev setup
@@ -316,7 +318,8 @@ When auditing webhook code, use Cursor command `/paymob-check-hmac`.
 - No Django Channels unless already justified elsewhere
 - System events that trigger customer notification:
   - Quoted (diagnostic + checkout link)
-  - Payment succeeded
+  - Payment succeeded (order stays `paid` until Kareem starts)
+  - Work started
   - Step completed
   - Ready for pickup
 
@@ -325,7 +328,7 @@ When auditing webhook code, use Cursor command `/paymob-check-hmac`.
 - Same `Customer` / `Conversation` / `Order` / `Message` as the web portal — no parallel Job model
 - `Message.channel=whatsapp` on inbound customer messages; `wa_message_id` for webhook idempotency
 - Phone from WhatsApp `wa_id` stored as E.164 (`+…`)
-- Outbound (only if the customer already wrote on WhatsApp): quote + Paymob checkout URL, step/progress replies, payment success, ready for pickup, Kareem’s chat replies
+- Outbound (only if the customer already wrote on WhatsApp): quote + Paymob checkout URL, step/progress replies, payment success, work started, ready for pickup, Kareem’s chat replies
 - Unofficial clients (Baileys / go-whatsapp) stay out of scope
 
 ---
@@ -382,6 +385,7 @@ static/
 
 - Mark paid from Paymob redirect URL
 - Let Kareem complete steps before `in_progress`
+- Start work from the Paymob webhook — Kareem clicks **Start work**
 - Call any LLM except the Groq adapter
 - Create a parallel `Request` model
 - Copy the same customer message onto a second conversation (bind in place; fork by moving)
@@ -425,11 +429,12 @@ curl http://127.0.0.1:8000/   # {"status":"ok"}
 5. System snapshots diagnostic → OrderSteps; status → `quoted`
 6. Customer gets Kareem quote bubble: diagnostic summary, note, checkout
 7. Customer pays via Paymob Unified Checkout
-8. Webhook HMAC verified → `in_progress`; Kareem notified
-9. Follow-ups stay on this order chat. A **new** repair from this thread **forks** a child conversation (parent pointer; triggering message moved)
-10. Kareem completes steps one by one (or instant complete); customer notified each time
-11. All steps done → `ready_for_pickup`; customer notified to collect car
-12. Kareem marks `completed` when car is collected
+8. Webhook HMAC verified → `paid`; Kareem notified; customer Pay button hides
+9. Kareem clicks **Start work** → `in_progress`
+10. Follow-ups stay on this order chat. A **new** repair from this thread **forks** a child conversation (parent pointer; triggering message moved)
+11. Kareem completes steps one by one (or instant complete); customer notified each time
+12. All steps done → `ready_for_pickup`; customer notified to collect car
+13. Kareem marks `completed` when car is collected
 
 ---
 

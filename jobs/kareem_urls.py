@@ -23,6 +23,7 @@ from jobs.kareem_views import (
     kareem_request_quote,
     kareem_request_thread,
     kareem_requests_list,
+    kareem_start_work,
 )
 
 urlpatterns = [
@@ -66,6 +67,11 @@ urlpatterns = [
         'requests/<int:order_id>/confirm-paid/',
         kareem_confirm_paid,
         name='kareem-confirm-paid',
+    ),
+    path(
+        'requests/<int:order_id>/start-work/',
+        kareem_start_work,
+        name='kareem-start-work',
     ),
     path(
         'requests/<int:order_id>/mark-ready/',
