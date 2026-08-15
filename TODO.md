@@ -66,7 +66,7 @@ Full product spec: [AGENTS.md](AGENTS.md).
 
 ### Batch 7 — AI intake — **done**
 
-- [x] `ai` app + `cursor-sdk` adapter (`ai/llm.py`)
+- [x] `ai` app + Groq adapter (`ai/llm.py`) + Whisper STT (`ai/stt.py`)
 - [x] Labeler (new / existing / irrelevant) + Tagger (label M2M)
 - [x] Intake conversation + `process_chat_message` with dumb fallback
 - [x] Persistent chat thread on `/chat/` with order links

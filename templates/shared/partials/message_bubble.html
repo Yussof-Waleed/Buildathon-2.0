@@ -23,7 +23,7 @@
       {% if kind == 'quote' and quote %}
         <div class="msg-quote-card">
           <p class="msg-quote-label">{% trans "Price quote" %}</p>
-          <p class="msg-quote-title">{{ quote.title }}</p>
+          <p class="msg-quote-title" dir="auto">{{ quote.title }}</p>
           <p class="msg-quote-price">
             <bdi dir="ltr">{{ quote.price }}</bdi>
             <span class="msg-quote-currency">{% trans "EGP" %}</span>
@@ -31,7 +31,7 @@
           {% if quote.steps %}
             <ul class="msg-quote-steps">
               {% for step in quote.steps %}
-                <li>
+                <li dir="auto">
                   <span>{{ step.title }}</span>
                   <span class="msg-quote-step-time">~<bdi dir="ltr">{{ step.minutes }}</bdi> {% trans "min" %}</span>
                 </li>
@@ -54,17 +54,22 @@
           {% endif %}
         </div>
       {% elif kind == 'step' %}
-        <p class="msg-step-done">
+        <p class="msg-step-done" dir="auto">
           <i class="fa-solid fa-check text-emerald-400" aria-hidden="true"></i>
-          {% trans "Completed:" %} <strong>{{ step_title }}</strong>
+          {% blocktrans with title=step_title %}Completed: {{ title }}{% endblocktrans %}
         </p>
       {% elif kind == 'ready' %}
-        <p class="msg-ready-banner" dir="auto">
+        <p class="msg-ready-banner">
           <i class="fa-solid fa-car-side" aria-hidden="true"></i>
           {{ text }}
         </p>
       {% elif kind == 'payment' %}
-        <p class="msg-payment-banner" dir="auto">
+        <p class="msg-payment-banner">
+          <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
+          {{ text }}
+        </p>
+      {% elif kind == 'completed' %}
+        <p class="msg-payment-banner">
           <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
           {{ text }}
         </p>

@@ -1,6 +1,6 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:'ar' }}" dir="{% if LANGUAGE_CODE == 'en' %}ltr{% else %}rtl{% endif %}">
+<html lang="{{ LANGUAGE_CODE|default:'ar' }}" dir="{% if LANGUAGE_CODE|slice:':2' == 'en' %}ltr{% else %}rtl{% endif %}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,7 +41,7 @@
   </script>
   <link rel="stylesheet" href="{% static 'css/warsha.css' %}">
 </head>
-<body class="min-h-dvh {% if LANGUAGE_CODE == 'en' %}font-en{% else %}font-ar{% endif %} text-paper bg-garage-950 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(200,121,65,0.22),transparent),radial-gradient(ellipse_50%_40%_at_100%_50%,rgba(232,160,102,0.08),transparent),linear-gradient(180deg,#0c0a09_0%,#14100e_100%)] bg-fixed {% block body_class %}{% endblock %}">
+<body class="min-h-dvh {% if LANGUAGE_CODE|slice:':2' == 'en' %}font-en{% else %}font-ar{% endif %} text-paper bg-garage-950 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(200,121,65,0.22),transparent),radial-gradient(ellipse_50%_40%_at_100%_50%,rgba(232,160,102,0.08),transparent),linear-gradient(180deg,#0c0a09_0%,#14100e_100%)] bg-fixed {% block body_class %}{% endblock %}">
   {% block site_header %}
   <header class="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-copper/20 bg-garage-950/80 px-4 py-3 backdrop-blur-xl sm:px-5">
     <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-lg font-extrabold text-paper no-underline">

@@ -18,6 +18,9 @@ def health(_request):
         'status': 'ok',
         'product': 'warsha',
         'paymob': paymob,
+        'groq': {
+            'configured': bool(settings.GROQ_API_KEY),
+        },
     })
 
 

@@ -36,8 +36,7 @@ body > main {
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .status-pending_review { background: rgba(232, 184, 74, 0.2); color: #e8c84a; }
@@ -202,24 +201,26 @@ body > main {
   display: flex;
   width: 100%;
   max-width: 100%;
-}
-
-.msg-row-customer {
-  justify-content: flex-start;
-}
-
-.msg-row-kareem {
-  justify-content: flex-end;
   align-items: flex-end;
   gap: 0.5rem;
 }
 
-.msg-row-kareem-view.msg-row-customer {
+/* Customer = "me": end side (left in RTL, right in LTR) */
+.msg-row-customer {
   justify-content: flex-end;
 }
 
-.msg-row-kareem-view.msg-row-kareem {
+/* Kareem = "them": start side (right in RTL, left in LTR) */
+.msg-row-kareem {
   justify-content: flex-start;
+}
+
+.msg-row-kareem-view.msg-row-customer {
+  justify-content: flex-start;
+}
+
+.msg-row-kareem-view.msg-row-kareem {
+  justify-content: flex-end;
 }
 
 .msg-bubble {
@@ -228,21 +229,32 @@ body > main {
   padding: 0.625rem 0.875rem;
   font-size: 0.9375rem;
   line-height: 1.45;
+  text-align: start;
 }
 
 .msg-bubble-customer {
   background: linear-gradient(135deg, #1a4d32 0%, #0f3322 100%);
   border: 1px solid rgba(76, 175, 130, 0.25);
   color: #e8f5e9;
-  border-bottom-right-radius: 0.25rem;
+  border-end-end-radius: 0.25rem;
 }
 
 .msg-bubble-kareem {
   background: linear-gradient(145deg, rgba(40, 28, 20, 0.95) 0%, rgba(12, 10, 9, 0.98) 100%);
   border: 1px solid rgba(232, 160, 102, 0.2);
   color: #f5efe6;
-  border-bottom-left-radius: 0.25rem;
+  border-end-start-radius: 0.25rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.msg-row-kareem-view .msg-bubble-customer {
+  border-end-end-radius: 1rem;
+  border-end-start-radius: 0.25rem;
+}
+
+.msg-row-kareem-view .msg-bubble-kareem {
+  border-end-start-radius: 1rem;
+  border-end-end-radius: 0.25rem;
 }
 
 .msg-author-label {
@@ -283,8 +295,7 @@ body > main {
   font-size: 0.6875rem;
   font-weight: 600;
   color: #a89f94;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .msg-quote-title {
@@ -398,4 +409,25 @@ body > main {
 
 .msg-order-link:hover {
   text-decoration: underline;
+}
+
+.back-icon {
+  display: inline-block;
+}
+
+[dir="ltr"] .back-icon {
+  transform: scaleX(-1);
+}
+
+.send-icon {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+[dir="ltr"] .send-icon {
+  transform: none;
+}
+
+[dir="rtl"] .logout-icon {
+  transform: scaleX(-1);
 }

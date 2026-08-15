@@ -216,5 +216,7 @@ PAYMOB_NOTIFICATION_URL = os.environ.get(
 )
 PAYMOB_REDIRECTION_URL = os.environ.get('PAYMOB_REDIRECTION_URL', '')
 
-# Cursor LLM (Labeler / Tagger)
-CURSOR_API_KEY = os.environ.get('CURSOR_API_KEY', '')
+# Groq LLM (Labeler / Tagger) + Whisper STT
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
+GROQ_MODEL = os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile')
+GROQ_STT_MODEL = os.environ.get('GROQ_STT_MODEL', 'whisper-large-v3-turbo')

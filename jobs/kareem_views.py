@@ -302,11 +302,18 @@ def kareem_request_message(request, order_id):
     if not body and not audio:
         return redirect('kareem-request-detail', order_id=order_id)
 
+    if not order.chat_open:
+        messages.error(request, _('This chat is closed — the order was cancelled.'))
+        return redirect('kareem-request-detail', order_id=order_id)
+
     try:
         validate_audio_upload(audio)
     except ValidationError:
         messages.error(request, _('Invalid audio recording.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
-    post_mechanic_message(order, body, audio=audio)
+    try:
+        post_mechanic_message(order, body, audio=audio)
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
     return redirect('kareem-request-detail', order_id=order_id)

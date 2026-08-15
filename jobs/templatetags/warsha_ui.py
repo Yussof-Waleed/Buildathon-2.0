@@ -1,4 +1,6 @@
 from django import template
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
 from catalog.i18n import localized_field
@@ -18,6 +20,8 @@ def _message_kind(body: str) -> str:
         return 'ready'
     if text.startswith('__payment__'):
         return 'payment'
+    if text.startswith('__completed__'):
+        return 'completed'
     if text.startswith('[order:'):
         return 'order_link'
     return 'text'
@@ -86,7 +90,13 @@ def _body_after_prefix(body: str) -> str:
     text = body.strip()
     if '\n' in text:
         return text.split('\n', 1)[1].strip()
-    return text.replace('__step__', '').replace('__ready__', '').replace('__payment__', '').strip()
+    return (
+        text.replace('__step__', '')
+        .replace('__ready__', '')
+        .replace('__payment__', '')
+        .replace('__completed__', '')
+        .strip()
+    )
 
 
 @register.filter
@@ -101,8 +111,7 @@ def piasters_egp(piasters) -> str:
     return f'{int(piasters) / 100:.2f}'
 
 
-@register.inclusion_tag('shared/partials/message_bubble.html')
-def message_bubble(message, order=None, paymob_ready=False, viewer='customer'):
+def _message_bubble_context(message, order=None, paymob_ready=False, viewer='customer'):
     body = message.body or ''
     kind = _message_kind(body)
     ctx = {
@@ -133,9 +142,29 @@ def message_bubble(message, order=None, paymob_ready=False, viewer='customer'):
         ctx['step_title'] = _step_title_from_order(order, body)
     elif kind == 'order_link':
         ctx['order_link'] = _parse_order_link(body)
-    elif kind in ('ready', 'payment', 'text'):
-        ctx['text'] = _body_after_prefix(body) if kind != 'text' else body
+    elif kind == 'ready':
+        ctx['text'] = _('Your car is ready for pickup — come to the workshop.')
+    elif kind == 'payment':
+        ctx['text'] = _('Payment confirmed — work has started on your order.')
+    elif kind == 'completed':
+        ctx['text'] = _('Car collected — thank you for trusting Warsha.')
+    elif kind == 'text':
+        ctx['text'] = body
     return ctx
+
+
+@register.simple_tag(takes_context=True)
+def message_bubble(context, message, order=None, paymob_ready=False, viewer='customer'):
+    # Inclusion tags copy RequestContext and crash on Python 3.14 + Django 5.1.
+    ctx = _message_bubble_context(message, order, paymob_ready, viewer)
+    ctx['csrf_token'] = context.get('csrf_token')
+    return mark_safe(
+        render_to_string(
+            'shared/partials/message_bubble.html',
+            ctx,
+            request=context.get('request'),
+        )
+    )
 
 
 @register.filter

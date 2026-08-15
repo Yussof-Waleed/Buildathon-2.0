@@ -4,7 +4,7 @@
 
 1. Open tunnel URL (or `http://127.0.0.1:8000/`) → **hero home** with ورشة title and persona tiles
 2. Tap **عميل** → enter phone → **chat** → send text or audio (mic icon)
-3. **With `CURSOR_API_KEY`:** try **مرحبا** (Arabic reply, no order — stay on `/chat/`) vs engine problem (same chat **binds** to a new order; you land on `/orders/<id>/`)
+3. **With `GROQ_API_KEY`:** try **مرحبا** (Arabic reply, no order — stay on `/chat/`) vs engine problem (same chat **binds** to a new order; you land on `/orders/<id>/`)
 4. Second tab: **كريم** → login `kareem` / `warsha2026` → **Overview** (`/k/`) or **الطلبات** → open request → **reply in the thread** → see **label chips** → listen to audio → **quote**
 5. Customer order page is the dedicated chat (composer at the bottom) → pay from the quote bubble (or waiting note if keys missing)
 6. Follow-ups stay on that order chat. A **second unrelated repair** from the same thread **forks** a new chat (parent link on the old thread)
@@ -13,7 +13,7 @@
 9. Kareem **تم الاستلام** → order `completed`
 10. Customer **طلباتي** (`/orders/`) shows full history
 
-**Without `CURSOR_API_KEY`:** first repair message **binds** the current chat to an order and redirects to order detail. Later messages on that order append (no extra threads).
+**Without `GROQ_API_KEY`:** first repair message **binds** the current chat to an order and redirects to order detail. Later messages on that order append (no extra threads).
 
 ## Continual chats
 
@@ -41,7 +41,7 @@ python manage.py check_paymob
 curl http://127.0.0.1:8000/health/
 ```
 
-`/health/` includes `paymob.ready`, `missing`, and `warnings`.
+`/health/` includes `paymob.ready`, `missing`, `warnings`, and `groq.configured`.
 
 ## Paymob (when onboarded)
 

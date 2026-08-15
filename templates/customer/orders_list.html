@@ -1,13 +1,20 @@
 {% extends "customer/base.html" %}
 {% load warsha_ui i18n %}
 
-{% block title %}ورشة — طلباتي{% endblock %}
+{% block title %}{% trans "Warsha" %} — {% trans "My orders" %}{% endblock %}
 
 {% block customer_content %}
 <div class="min-h-0 flex-1 overflow-y-auto p-4">
-  <div class="mb-5">
-    <h1 class="text-2xl font-extrabold text-paper">طلباتي</h1>
-    <p class="mt-1 text-sm text-paper-muted">كل طلباتك في ورشة كريم</p>
+  <div class="mb-5 flex items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-extrabold text-paper">{% trans "My orders" %}</h1>
+      <p class="mt-1 text-sm text-paper-muted">{% trans "All your orders at Kareem's workshop" %}</p>
+    </div>
+    {% if orders %}
+      <a href="{% url 'customer-chat' %}" class="shrink-0 rounded-xl bg-gradient-to-r from-copper-bright to-copper-dim px-4 py-2.5 text-sm font-bold text-garage-950 no-underline shadow-glow">
+        {% trans "New chat" %}
+      </a>
+    {% endif %}
   </div>
 
   {% if orders %}
@@ -21,7 +28,7 @@
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <strong class="text-paper">طلب <bdi dir="ltr">#{{ order.pk }}</bdi></strong>
+                  <strong class="text-paper">{% trans "Order" %} <bdi dir="ltr">#{{ order.pk }}</bdi></strong>
                   <span class="text-sm font-semibold text-copper-bright">{{ order.get_status_display }}</span>
                 </div>
                 <p class="mt-1 truncate text-sm text-paper-muted" dir="auto">
@@ -35,13 +42,13 @@
                 </p>
                 {% if order.quoted_price %}
                   <p class="mt-1 text-lg font-bold text-copper-bright">
-                    <bdi dir="ltr">{{ order.quoted_price }}</bdi> جنيه
+                    <bdi dir="ltr">{{ order.quoted_price }}</bdi> {% trans "EGP" %}
                   </p>
                 {% endif %}
                 {% if order.status == 'in_progress' or order.status == 'ready_for_pickup' %}
                   <div class="mt-2">
                     <div class="mb-1 flex justify-between text-xs text-paper-muted">
-                      <span>تقدم الشغل</span>
+                      <span>{% trans "Work progress" %}</span>
                       <span><bdi dir="ltr">{{ order.progress_percent }}%</bdi></span>
                     </div>
                     <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -52,7 +59,7 @@
                 <p class="mt-2 text-xs text-paper-muted"><bdi dir="ltr">{{ order.created_at|date:"d/m H:i" }}</bdi></p>
               </div>
               <span class="shrink-0 pt-1 text-paper-muted">
-                <i class="fa-solid fa-chevron-left text-sm"></i>
+                <i class="fa-solid fa-chevron-left text-sm back-icon"></i>
               </span>
             </div>
           </a>
@@ -61,9 +68,9 @@
     </ul>
   {% else %}
     <div class="rounded-2xl border border-dashed border-white/15 bg-black/20 px-6 py-10 text-center">
-      <p class="text-paper-muted">لا طلبات بعد</p>
+      <p class="text-paper-muted">{% trans "No orders yet" %}</p>
       <a href="{% url 'customer-chat' %}" class="mt-4 inline-block rounded-xl bg-gradient-to-r from-copper-bright to-copper-dim px-6 py-3 font-bold text-garage-950 no-underline shadow-glow transition hover:shadow-glow-lg">
-        ابدأ محادثة
+        {% trans "Start a chat" %}
       </a>
     </div>
   {% endif %}

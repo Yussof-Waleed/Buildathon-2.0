@@ -6,6 +6,7 @@ from typing import Literal
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from accounts.models import Customer
 from catalog.models import Diagnostic
@@ -28,6 +29,15 @@ class ProcessChatResult:
     route: Route
     order_id: int | None = None
     redirect: bool = False
+
+
+def order_chat_is_open(order: Order | None) -> bool:
+    return order is None or order.chat_open
+
+
+def assert_order_chat_open(order: Order | None) -> None:
+    if not order_chat_is_open(order):
+        raise ValidationError(_('This chat is closed — the order was cancelled.'))
 
 
 def validate_audio_upload(audio_file) -> None:
@@ -66,6 +76,7 @@ def create_order_from_intake(
     """Dumb intake: bind the current conversation to a new pending_review order."""
     if conversation is None:
         conversation = get_or_create_current_conversation(customer)
+    assert_order_chat_open(conversation.order)
     if conversation.order_id:
         Message.objects.create(
             conversation=conversation,
@@ -173,7 +184,7 @@ def complete_order_step(order: Order, step_id: int) -> Order:
         Message.objects.create(
             conversation=conversation,
             author_type=Message.AuthorType.MECHANIC,
-            body='__ready__\nالعربية جاهزة للاستلام — تقدر تيجي الورشة.',
+            body='__ready__',
             channel=Message.Channel.WEB,
         )
 
@@ -195,7 +206,7 @@ def mark_ready_for_pickup(order: Order) -> Order:
     Message.objects.create(
         conversation=conversation,
         author_type=Message.AuthorType.MECHANIC,
-        body='__ready__\nالعربية جاهزة للاستلام — تقدر تيجي الورشة.',
+        body='__ready__',
         channel=Message.Channel.WEB,
     )
 
@@ -214,7 +225,7 @@ def mark_order_completed(order: Order) -> Order:
     Message.objects.create(
         conversation=conversation,
         author_type=Message.AuthorType.MECHANIC,
-        body='تم استلام العربية — شكراً لثقتك في ورشة كريم.',
+        body='__completed__',
         channel=Message.Channel.WEB,
     )
 
@@ -229,19 +240,8 @@ def egp_from_piasters(piasters: int) -> Decimal:
     return Decimal(piasters) / 100
 
 
-def get_or_create_current_conversation(customer: Customer) -> Conversation:
-    """Open order chat if any; else unbound intake; never mint a ghost inbox while a job is open."""
-    open_conversation = (
-        Conversation.objects.filter(
-            customer=customer,
-            order__status__in=OPEN_ORDER_STATUSES,
-        )
-        .order_by('-created_at')
-        .first()
-    )
-    if open_conversation:
-        return open_conversation
-
+def get_or_create_intake_conversation(customer: Customer) -> Conversation:
+    """Always the unbound inbox so a new repair can start while other jobs are open."""
     unbound = Conversation.objects.filter(
         customer=customer,
         order__isnull=True,
@@ -251,8 +251,8 @@ def get_or_create_current_conversation(customer: Customer) -> Conversation:
     return Conversation.objects.create(customer=customer, order=None)
 
 
-def get_or_create_intake_conversation(customer: Customer) -> Conversation:
-    return get_or_create_current_conversation(customer)
+def get_or_create_current_conversation(customer: Customer) -> Conversation:
+    return get_or_create_intake_conversation(customer)
 
 
 def _open_orders_queryset(customer: Customer):
@@ -341,6 +341,7 @@ def _fork_conversation_for_new_order(
 
 
 def post_mechanic_message(order: Order, body: str, audio=None) -> Message:
+    assert_order_chat_open(order)
     conversation = _ensure_conversation(order)
     return Message.objects.create(
         conversation=conversation,
@@ -349,6 +350,26 @@ def post_mechanic_message(order: Order, body: str, audio=None) -> Message:
         audio=audio,
         channel=Message.Channel.WEB,
     )
+
+
+def _labeler_text_for_message(customer_message: Message, body: str) -> str:
+    """Prefer typed text, then Whisper transcript, then the audio placeholder."""
+    from ai.labeler import AUDIO_PLACEHOLDER
+    from ai.stt import looks_like_speech, transcribe_audio
+
+    labeler_text = body.strip()
+    if labeler_text:
+        return labeler_text
+
+    if customer_message.audio:
+        transcript = transcribe_audio(customer_message.audio)
+        if transcript:
+            if looks_like_speech(transcript):
+                customer_message.body = transcript
+                customer_message.save(update_fields=['body'])
+            return transcript
+
+    return AUDIO_PLACEHOLDER
 
 
 def process_chat_message(
@@ -361,11 +382,13 @@ def process_chat_message(
     Save on the current conversation, then Labeler binds, stays, or forks.
     Dumb fallback binds in place (or appends if already bound). Never copies.
     """
-    from ai.labeler import AUDIO_PLACEHOLDER, classify_message
+    from ai.labeler import classify_message
     from ai.llm import is_llm_configured
 
     if conversation is None:
         conversation = get_or_create_current_conversation(customer)
+
+    assert_order_chat_open(conversation.order)
 
     if not is_llm_configured():
         order = create_order_from_intake(
@@ -385,7 +408,7 @@ def process_chat_message(
         channel=Message.Channel.WEB,
     )
 
-    labeler_text = body.strip() or AUDIO_PLACEHOLDER
+    labeler_text = _labeler_text_for_message(customer_message, body)
     open_orders = _open_orders_for_labeler(customer)
 
     try:

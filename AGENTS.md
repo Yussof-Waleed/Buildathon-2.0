@@ -110,7 +110,7 @@ flowchart LR
 | `catalog` | `Label`, `Diagnostic`, `DiagnosticStep` |
 | `jobs` | `Order`, `OrderStep`, `Conversation`, `Message` |
 | `payments` | `Payment` |
-| `ai` | Cursor LLM adapter, LangGraph labeler/tagger |
+| `ai` | Groq LLM adapter, Groq Whisper STT, labeler/tagger |
 
 ### Core relations
 
@@ -216,9 +216,9 @@ flowchart TD
   Quote --> Notify[Kareem quote bubble plus checkout]
 ```
 
-### Labeler (one-shot via Cursor adapter)
+### Labeler (one-shot via Groq adapter)
 
-Input: customer message (+ optional audio placeholder), current conversation (bound order id or unbound), open orders.
+Input: customer message (typed text, or Whisper transcript when audio-only; audio placeholder if STT fails), current conversation (bound order id or unbound), open orders.
 
 Output: one of:
 
@@ -242,16 +242,18 @@ Output: list of label IDs to assign (multi-label). Kareem can override in UI.
 ### Audio handling
 
 - Store audio file on `Message`. Kareem listens in portal.
-- Optional STT → transcript fed to Tagger. **Do not block intake on STT failure.**
-- STT is not an LLM call. If added, use a dedicated STT service; classification still goes through Cursor.
+- Groq Whisper STT → transcript fed to Labeler and Tagger. **Do not block intake on STT failure.**
+- If audio-only and the transcript looks like speech, persist it on `Message.body` (do not overwrite a typed caption).
+- STT is not an LLM call. Classification still goes through the Groq chat adapter (`ai.llm`).
+- Engine noise is not speech — Whisper may return empty/junk; fall back to the audio placeholder. Kareem still listens.
 
 ### LLM constraint (hackathon)
 
-**Every in-product LLM call goes through one Cursor LLM adapter** (`ai.llm` or equivalent).
+**Every in-product LLM call goes through one Groq adapter** (`ai.llm`).
 
 - LangChain / LangGraph allowed **only** with that adapter as the model
-- **No** direct OpenAI, Anthropic, or Google LLM clients
-- Cursor SDK (`cursor-sdk`) is the integration path for runtime LLM calls
+- **No** direct OpenAI, Anthropic, Google, or Cursor LLM clients
+- Groq Python SDK (`groq`) is the integration path for chat; Whisper STT lives in `ai.stt`
 
 ---
 
@@ -295,7 +297,9 @@ PAYMOB_PUBLIC_KEY=
 PAYMOB_API_KEY=
 PAYMOB_HMAC_SECRET=
 PAYMOB_INTEGRATION_ID_CARD=
-CURSOR_API_KEY=
+GROQ_API_KEY=
+GROQ_MODEL=
+GROQ_STT_MODEL=
 ```
 
 When auditing webhook code, use Cursor command `/paymob-check-hmac`.
@@ -373,7 +377,7 @@ static/
 
 - Mark paid from Paymob redirect URL
 - Let Kareem complete steps before `in_progress`
-- Call any LLM except the Cursor adapter
+- Call any LLM except the Groq adapter
 - Create a parallel `Request` model
 - Copy the same customer message onto a second conversation (bind in place; fork by moving)
 - Invent a second source of truth for step ETA
@@ -431,4 +435,4 @@ curl http://127.0.0.1:8000/   # {"status":"ok"}
 - Multi-garage / marketplace
 - Customer accounts with email/password
 - Django Channels / WebSockets (unless team adds later)
-- Direct OpenAI/Anthropic/Google LLM calls
+- Direct OpenAI/Anthropic/Google/Cursor LLM calls (Groq adapter only)

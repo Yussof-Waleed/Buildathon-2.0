@@ -56,7 +56,7 @@ def apply_successful_payment(
         Message.objects.create(
             conversation=conversation,
             author_type=Message.AuthorType.MECHANIC,
-            body='__payment__\nتم تأكيد الدفع — بدأت الشغل على طلبك.',
+            body='__payment__',
             channel=Message.Channel.WEB,
         )
 

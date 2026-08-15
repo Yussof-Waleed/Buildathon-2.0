@@ -77,6 +77,10 @@ class Order(models.Model):
         done = self.steps.filter(completed_at__isnull=False).count()
         return round(done * 100 / total)
 
+    @property
+    def chat_open(self) -> bool:
+        return self.status != self.Status.CANCELLED
+
 
 class OrderStep(models.Model):
     order = models.ForeignKey(

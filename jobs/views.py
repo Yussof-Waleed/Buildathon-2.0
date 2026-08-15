@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.shortcuts import get_object_or_404, redirect, render
@@ -8,7 +9,7 @@ from jobs.services import (
     _ensure_conversation,
     _get_conversation,
     customer_has_open_orders,
-    get_or_create_current_conversation,
+    get_or_create_intake_conversation,
     process_chat_message,
     validate_audio_upload,
 )
@@ -28,7 +29,7 @@ def home(request):
 
 
 def _chat_context(customer, error=None):
-    conversation = get_or_create_current_conversation(customer)
+    conversation = get_or_create_intake_conversation(customer)
     thread_messages = conversation.messages.all()
     poll_thread = customer_has_open_orders(customer)
     return {
@@ -39,13 +40,6 @@ def _chat_context(customer, error=None):
         'error': error,
         'order': conversation.order,
     }
-
-
-def _redirect_if_bound_chat(customer):
-    conversation = get_or_create_current_conversation(customer)
-    if conversation.order_id:
-        return redirect('customer-order-detail', order_id=conversation.order_id)
-    return None
 
 
 def customer_home(request):
@@ -106,17 +100,13 @@ def customer_home(request):
     if customer is None:
         return render(request, 'customer/phone_gate.html')
 
-    bound = _redirect_if_bound_chat(customer)
-    if bound:
-        return bound
-
     return render(request, 'customer/chat.html', _chat_context(customer))
 
 
 @require_customer
 def customer_chat_thread(request):
     customer = get_customer(request)
-    conversation = get_or_create_current_conversation(customer)
+    conversation = get_or_create_intake_conversation(customer)
     return render(
         request,
         'shared/partials/message_thread.html',
@@ -168,7 +158,7 @@ def customer_order_detail(request, order_id):
     show_agreement = order.quoted_price is not None
     payment_return = request.GET.get('paid') == 'return'
     paymob = get_paymob_readiness()
-    poll_thread = True
+    poll_thread = order.status in ACTIVE_POLL_STATUSES
 
     return render(
         request,
@@ -233,6 +223,10 @@ def customer_order_message(request, order_id):
     order = get_object_or_404(Order, pk=order_id, customer=customer)
     conversation = _ensure_conversation(order)
 
+    if not order.chat_open:
+        messages.error(request, _('This chat is closed — the order was cancelled.'))
+        return redirect('customer-order-detail', order_id=order_id)
+
     body = request.POST.get('body', '').strip()
     audio = request.FILES.get('audio')
 
@@ -241,12 +235,13 @@ def customer_order_message(request, order_id):
 
     try:
         validate_audio_upload(audio)
-    except ValidationError:
+        result = process_chat_message(
+            customer, body, audio=audio, conversation=conversation,
+        )
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
         return redirect('customer-order-detail', order_id=order_id)
 
-    result = process_chat_message(
-        customer, body, audio=audio, conversation=conversation,
-    )
     if result.redirect and result.order_id and result.order_id != order.pk:
         return redirect('customer-order-detail', order_id=result.order_id)
 

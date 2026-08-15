@@ -1,43 +1,44 @@
 {% extends "mechanic/base.html" %}
-{% load warsha_ui %}
+{% load warsha_ui i18n %}
 
-{% block title %}ورشة — المدفوعات{% endblock %}
+{% block title %}{% trans "Warsha" %} — {% trans "Payments" %}{% endblock %}
 
 {% block mechanic_content %}
 <section class="page-card animate-fade-up">
   <div>
-    <h1 class="text-xl font-extrabold text-paper">المدفوعات</h1>
-    <p class="mt-0.5 text-xs text-paper-muted">سجل Paymob المحلي</p>
+    <h1 class="text-xl font-extrabold text-paper">{% trans "Payments" %}</h1>
+    <p class="mt-0.5 text-xs text-paper-muted">{% trans "Local Paymob ledger" %}</p>
   </div>
 
   <div class="mt-3 flex flex-wrap gap-2">
     <span class="rounded-full border border-copper/30 bg-copper/10 px-2.5 py-1 text-xs">
-      اليوم <strong class="text-copper-bright"><bdi dir="ltr">{{ pay_summary.today_paid_piasters|piasters_egp }}</bdi> ج</strong>
+      {% trans "Today" %} <strong class="text-copper-bright"><bdi dir="ltr">{{ pay_summary.today_paid_piasters|piasters_egp }}</bdi> {% trans "EGP" %}</strong>
     </span>
     <span class="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-xs text-paper-muted">
-      معلقة <strong>{{ pay_summary.pending_count }}</strong>
+      {% trans "Pending" %} <strong>{{ pay_summary.pending_count }}</strong>
     </span>
   </div>
 
   <form method="get" class="mt-3 flex flex-wrap items-end gap-2">
     <div class="min-w-[120px]">
-      <label for="status" class="text-xs text-paper-muted">الحالة</label>
+      <label for="status" class="text-xs text-paper-muted">{% trans "Status" %}</label>
       <select id="status" name="status" class="mt-0.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
-        <option value="">الكل</option>
+        <option value="">{% trans "All" %}</option>
         {% for value, label in status_choices %}
-          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %} lang="en" dir="ltr">{{ label }}</option>
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="min-w-[120px]">
-      <label for="date" class="text-xs text-paper-muted">التاريخ</label>
+      <label for="date" class="text-xs text-paper-muted">{% trans "Date" %}</label>
       <select id="date" name="date" class="mt-0.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
-        <option value="all" {% if date_filter == 'all' %}selected{% endif %}>الكل</option>
-        <option value="today" {% if date_filter == 'today' %}selected{% endif %}>اليوم</option>
-        <option value="week" {% if date_filter == 'week' %}selected{% endif %}>7 أيام</option>
+        <option value="all" {% if date_filter == 'all' %}selected{% endif %}>{% trans "All" %}</option>
+        <option value="today" {% if date_filter == 'today' %}selected{% endif %}>{% trans "Today" %}</option>
+        <option value="week" {% if date_filter == 'week' %}selected{% endif %}>{% trans "7 days" %}</option>
       </select>
     </div>
-    {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label="تصفية" %}
+    {% trans "Filter" as filter_label %}
+    {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=filter_label %}
   </form>
 
   {% if payments %}
@@ -46,10 +47,10 @@
         <thead>
           <tr class="border-b border-white/10 text-xs text-paper-muted">
             <th class="px-2 py-2 text-start">#</th>
-            <th class="px-2 py-2 text-start">العميل</th>
-            <th class="px-2 py-2 text-start">المبلغ</th>
-            <th class="px-2 py-2 text-start">الحالة</th>
-            <th class="px-2 py-2 text-start">التاريخ</th>
+            <th class="px-2 py-2 text-start">{% trans "Customer" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Amount" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Status" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Date" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -61,8 +62,8 @@
                 </a>
               </td>
               <td class="px-2 py-2 text-xs"><bdi dir="ltr">{{ payment.order.customer.phone }}</bdi></td>
-              <td class="px-2 py-2 text-xs"><bdi dir="ltr">{{ payment.amount_piasters|piasters_egp }}</bdi> ج</td>
-              <td class="px-2 py-2 text-xs font-en uppercase" lang="en">{{ payment.get_status_display }}</td>
+              <td class="px-2 py-2 text-xs"><bdi dir="ltr">{{ payment.amount_piasters|piasters_egp }}</bdi> {% trans "EGP" %}</td>
+              <td class="px-2 py-2 text-xs">{{ payment.get_status_display }}</td>
               <td class="px-2 py-2 text-xs text-paper-muted"><bdi dir="ltr">{{ payment.created_at|date:"d/m H:i" }}</bdi></td>
             </tr>
           {% endfor %}
@@ -75,14 +76,14 @@
         <a href="{% url 'kareem-request-detail' order_id=payment.order_id %}" class="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-xs no-underline">
           <div class="flex justify-between">
             <strong class="text-copper-bright">#<bdi dir="ltr">{{ payment.order_id }}</bdi></strong>
-            <span class="font-en uppercase text-paper-muted" lang="en">{{ payment.get_status_display }}</span>
+            <span class="text-paper-muted">{{ payment.get_status_display }}</span>
           </div>
-          <p class="mt-0.5 text-paper-muted"><bdi dir="ltr">{{ payment.order.customer.phone }}</bdi> · <bdi dir="ltr">{{ payment.amount_piasters|piasters_egp }}</bdi> ج</p>
+          <p class="mt-0.5 text-paper-muted"><bdi dir="ltr">{{ payment.order.customer.phone }}</bdi> · <bdi dir="ltr">{{ payment.amount_piasters|piasters_egp }}</bdi> {% trans "EGP" %}</p>
         </a>
       {% endfor %}
     </div>
   {% else %}
-    <p class="mt-3 text-sm text-paper-muted">لا توجد مدفوعات.</p>
+    <p class="mt-3 text-sm text-paper-muted">{% trans "No payments." %}</p>
   {% endif %}
 </section>
 {% endblock %}

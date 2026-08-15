@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-15 17:29+0300\n"
+"POT-Creation-Date: 2026-08-15 18:15+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,125 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: jobs/models.py:11 templates/customer/orders_list.html:33
+
+#: catalog/kareem_views.py:38
+msgid "Diagnostic created."
+msgstr ""
+
+#: catalog/kareem_views.py:70
+msgid "Diagnostic updated."
+msgstr ""
+
+#: catalog/kareem_views.py:96
+msgid "Cannot delete a diagnostic linked to orders."
+msgstr ""
+
+#: catalog/kareem_views.py:100
+msgid "Diagnostic deleted."
+msgstr ""
+
+#: catalog/kareem_views.py:112
+msgid "Label added."
+msgstr ""
+
+#: catalog/kareem_views.py:137 catalog/kareem_views.py:145
+msgid "Invalid label titles."
+msgstr ""
+
+#: catalog/kareem_views.py:143
+msgid "Label updated."
+msgstr ""
+
+#: catalog/kareem_views.py:156
+msgid "Cannot delete labels linked to orders."
+msgstr ""
+
+#: catalog/kareem_views.py:160
+msgid "Label deleted."
+msgstr ""
+
+#: jobs/kareem_views.py:195
+msgid "This order cannot be quoted — status is not pending review."
+msgstr ""
+
+#: jobs/kareem_views.py:200
+msgid "Choose a diagnostic."
+msgstr ""
+
+#: jobs/kareem_views.py:209
+#, python-format
+msgid "Quote sent — %(price)s EGP"
+msgstr ""
+
+#: jobs/kareem_views.py:223
+msgid "Payment cannot be confirmed for this order."
+msgstr ""
+
+#: jobs/kareem_views.py:233
+msgid "Payment confirmed (dev) — work started."
+msgstr ""
+
+#: jobs/kareem_views.py:245
+msgid "Order cannot be marked ready for pickup."
+msgstr ""
+
+#: jobs/kareem_views.py:249
+msgid "Order marked ready for pickup — customer notified."
+msgstr ""
+
+#: jobs/kareem_views.py:261
+msgid "Steps cannot be completed before work starts."
+msgstr ""
+
+#: jobs/kareem_views.py:265
+msgid "Step not found."
+msgstr ""
+
+#: jobs/kareem_views.py:271
+msgid "All steps done — order ready for pickup."
+msgstr ""
+
+#: jobs/kareem_views.py:273
+msgid "Step completed."
+msgstr ""
+
+#: jobs/kareem_views.py:285
+msgid "Order cannot be marked completed."
+msgstr ""
+
+#: jobs/kareem_views.py:289
+msgid "Order completed — car collected."
+msgstr ""
+
+#: jobs/kareem_views.py:306 jobs/services.py:40 jobs/views.py:227
+#: templates/customer/order_detail.html:43
+#: templates/customer/order_detail.html:107
+#: templates/mechanic/request_detail.html:21
+#: templates/mechanic/request_detail.html:59
+msgid "This chat is closed — the order was cancelled."
+msgstr ""
+
+#: jobs/kareem_views.py:312
+msgid "Invalid audio recording."
+msgstr ""
+
+#: jobs/models.py:11 templates/customer/orders_list.html:40
+#: templates/mechanic/overview.html:15 templates/mechanic/requests_list.html:14
 msgid "Pending review"
 msgstr ""
 
-#: jobs/models.py:12
+#: jobs/models.py:12 templates/mechanic/overview.html:19
+#: templates/mechanic/requests_list.html:15
 msgid "Quoted"
 msgstr ""
 
-#: jobs/models.py:13
+#: jobs/models.py:13 templates/mechanic/overview.html:23
+#: templates/mechanic/requests_list.html:16
 msgid "In progress"
 msgstr ""
 
-#: jobs/models.py:14
+#: jobs/models.py:14 templates/mechanic/overview.html:27
+#: templates/mechanic/request_detail.html:147
 msgid "Ready for pickup"
 msgstr ""
 
@@ -41,35 +147,61 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: jobs/models.py:136 jobs/templatetags/warsha_ui.py:144
+#: jobs/models.py:149 jobs/templatetags/warsha_ui.py:173
+#: templates/mechanic/money.html:50 templates/mechanic/requests_list.html:39
 msgid "Customer"
 msgstr ""
 
-#: jobs/models.py:137
+#: jobs/models.py:150
 msgid "Mechanic"
 msgstr ""
 
-#: jobs/models.py:138
+#: jobs/models.py:151
 msgid "System"
 msgstr ""
 
-#: jobs/models.py:141
+#: jobs/models.py:154
 msgid "Web"
 msgstr ""
 
-#: jobs/models.py:142
+#: jobs/models.py:155
 msgid "WhatsApp"
 msgstr ""
 
-#: jobs/templatetags/warsha_ui.py:144
+#: jobs/templatetags/warsha_ui.py:146 templates/customer/order_detail.html:49
+msgid "Your car is ready for pickup — come to the workshop."
+msgstr ""
+
+#: jobs/templatetags/warsha_ui.py:148
+msgid "Payment confirmed — work has started on your order."
+msgstr ""
+
+#: jobs/templatetags/warsha_ui.py:150
+msgid "Car collected — thank you for trusting Warsha."
+msgstr ""
+
+#: jobs/templatetags/warsha_ui.py:173
 msgid "You"
 msgstr ""
 
-#: jobs/templatetags/warsha_ui.py:146
+#: jobs/templatetags/warsha_ui.py:175 templates/customer/chat.html:11
 msgid "Kareem"
 msgstr ""
 
-#: payments/models.py:9
+#: jobs/views.py:55
+msgid "Enter your mobile number."
+msgstr ""
+
+#: jobs/views.py:65
+msgid "Invalid number. Example: ⁦01012345678⁩ or ⁦+201012345678⁩"
+msgstr ""
+
+#: jobs/views.py:81
+msgid "Type your message or record audio."
+msgstr ""
+
+#: payments/models.py:9 templates/mechanic/money.html:18
+#: templates/mechanic/overview.html:37
 msgid "Pending"
 msgstr ""
 
@@ -77,13 +209,145 @@ msgstr ""
 msgid "Paid"
 msgstr ""
 
-#: payments/models.py:11
+#: payments/models.py:11 templates/mechanic/overview.html:40
 msgid "Failed"
 msgstr ""
 
+#: payments/views.py:29
+msgid "This order cannot be paid."
+msgstr ""
+
+#: payments/views.py:38
+#, python-format
+msgid "Paymob error: %(detail)s"
+msgstr ""
+
+#: templates/customer/chat.html:4 templates/customer/order_detail.html:4
+#: templates/customer/orders_list.html:4 templates/customer/phone_gate.html:4
 #: templates/mechanic/diagnostic_form.html:4
-#: templates/mechanic/labels_list.html:4
+#: templates/mechanic/diagnostics_list.html:4
+#: templates/mechanic/labels_list.html:4 templates/mechanic/login.html:4
+#: templates/mechanic/money.html:4 templates/mechanic/overview.html:4
+#: templates/mechanic/request_detail.html:4
+#: templates/mechanic/requests_list.html:4
 msgid "Warsha"
+msgstr ""
+
+#: templates/customer/chat.html:4 templates/customer/partials/bottom_nav.html:9
+#: templates/mechanic/request_detail.html:34
+msgid "Chat"
+msgstr ""
+
+#: templates/customer/chat.html:11
+msgid "Shubra workshop"
+msgstr ""
+
+#: templates/customer/chat.html:12
+msgid "Online"
+msgstr ""
+
+#: templates/customer/chat.html:19
+msgid "Tell us about your car… type or record the engine sound."
+msgstr ""
+
+#: templates/customer/chat.html:44
+msgid "Example: the engine makes a strange noise when I turn on the A/C"
+msgstr ""
+
+#: templates/customer/chat.html:45 templates/customer/order_detail.html:103
+#: templates/shared/partials/chat_composer.html:3
+msgid "Your message"
+msgstr ""
+
+#: templates/customer/order_detail.html:4
+#: templates/customer/order_detail.html:19
+#: templates/customer/orders_list.html:31
+msgid "Order"
+msgstr ""
+
+#: templates/customer/order_detail.html:12
+msgid "All my orders"
+msgstr ""
+
+#: templates/customer/order_detail.html:14
+#: templates/customer/orders_list.html:15
+msgid "New chat"
+msgstr "New chat"
+
+#: templates/customer/order_detail.html:38
+msgid "Checking payment… refresh in a moment."
+msgstr ""
+
+#: templates/customer/order_detail.html:56
+#: templates/customer/orders_list.html:51
+msgid "Work progress"
+msgstr ""
+
+#: templates/customer/order_detail.html:64
+msgid "Time remaining:"
+msgstr ""
+
+#: templates/customer/order_detail.html:64
+#: templates/mechanic/request_detail.html:74
+#: templates/shared/partials/message_bubble.html:36
+msgid "min"
+msgstr ""
+
+#: templates/customer/order_detail.html:90
+msgid "Cancel order"
+msgstr ""
+
+#: templates/customer/order_detail.html:102
+msgid "Write to Kareem…"
+msgstr ""
+
+#: templates/customer/orders_list.html:4 templates/customer/orders_list.html:10
+#: templates/customer/partials/bottom_nav.html:16
+msgid "My orders"
+msgstr ""
+
+#: templates/customer/orders_list.html:11
+msgid "All your orders at Kareem's workshop"
+msgstr ""
+
+#: templates/customer/orders_list.html:45
+#: templates/mechanic/diagnostics_list.html:34
+#: templates/mechanic/diagnostics_list.html:57 templates/mechanic/money.html:15
+#: templates/mechanic/money.html:65 templates/mechanic/money.html:81
+#: templates/mechanic/overview.html:34 templates/mechanic/overview.html:76
+#: templates/mechanic/request_detail.html:95
+#: templates/mechanic/request_detail.html:115
+#: templates/shared/partials/message_bubble.html:29
+#: templates/shared/partials/message_bubble.html:49
+msgid "EGP"
+msgstr ""
+
+#: templates/customer/orders_list.html:71
+msgid "No orders yet"
+msgstr ""
+
+#: templates/customer/orders_list.html:73
+msgid "Start a chat"
+msgstr ""
+
+#: templates/customer/phone_gate.html:4
+msgid "Enter your number"
+msgstr ""
+
+#: templates/customer/phone_gate.html:8
+msgid "Welcome to Warsha"
+msgstr ""
+
+#: templates/customer/phone_gate.html:9
+msgid "Your number is enough — no OTP"
+msgstr ""
+
+#: templates/customer/phone_gate.html:17
+msgid "Mobile number"
+msgstr ""
+
+#: templates/customer/phone_gate.html:32
+msgid "Enter Warsha"
 msgstr ""
 
 #: templates/mechanic/diagnostic_form.html:4
@@ -93,6 +357,7 @@ msgstr ""
 
 #: templates/mechanic/diagnostic_form.html:4
 #: templates/mechanic/diagnostic_form.html:8
+#: templates/mechanic/diagnostics_list.html:13
 msgid "New diagnostic"
 msgstr ""
 
@@ -117,6 +382,7 @@ msgid "Price (EGP)"
 msgstr ""
 
 #: templates/mechanic/diagnostic_form.html:31
+#: templates/mechanic/diagnostics_list.html:25
 msgid "Steps"
 msgstr ""
 
@@ -137,16 +403,57 @@ msgid "English description"
 msgstr ""
 
 #: templates/mechanic/diagnostic_form.html:65
-#: templates/mechanic/labels_list.html:43
+#: templates/mechanic/diagnostics_list.html:42
+#: templates/mechanic/labels_list.html:44
 msgid "Delete"
 msgstr ""
 
 #: templates/mechanic/diagnostic_form.html:76
-#: templates/mechanic/labels_list.html:37
+#: templates/mechanic/labels_list.html:38
 msgid "Save"
 msgstr ""
 
+#: templates/mechanic/diagnostics_list.html:4
+#: templates/mechanic/diagnostics_list.html:10
+#: templates/mechanic/partials/nav.html:17
+msgid "Diagnostics"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:11
+msgid "Quote templates"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:23
+msgid "Name"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:24
+msgid "Price"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:26
+#: templates/mechanic/partials/nav.html:9
+#: templates/mechanic/requests_list.html:4
+#: templates/mechanic/requests_list.html:9
+msgid "Requests"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:38
+#: templates/mechanic/diagnostics_list.html:59
+msgid "Edit"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:57
+msgid "steps"
+msgstr ""
+
+#: templates/mechanic/diagnostics_list.html:64
+msgid "No diagnostics."
+msgstr ""
+
 #: templates/mechanic/labels_list.html:4 templates/mechanic/labels_list.html:9
+#: templates/mechanic/partials/nav.html:21
+#: templates/mechanic/requests_list.html:41
 msgid "Labels"
 msgstr ""
 
@@ -158,14 +465,198 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-#: templates/mechanic/labels_list.html:50
+#: templates/mechanic/labels_list.html:51
 msgid "No labels yet."
 msgstr ""
 
-#: templates/mechanic/request_detail.html:93
-#: templates/shared/partials/message_bubble.html:29
-#: templates/shared/partials/message_bubble.html:49
-msgid "EGP"
+#: templates/mechanic/login.html:4
+msgid "Kareem login"
+msgstr ""
+
+#: templates/mechanic/login.html:8 templates/mechanic/overview.html:10
+#: templates/mechanic/requests_list.html:10
+msgid "Kareem's board"
+msgstr ""
+
+#: templates/mechanic/login.html:9 templates/mechanic/login.html:24
+msgid "Sign in"
+msgstr ""
+
+#: templates/mechanic/login.html:12
+msgid "Username or password is incorrect."
+msgstr ""
+
+#: templates/mechanic/login.html:17
+msgid "Username"
+msgstr ""
+
+#: templates/mechanic/login.html:20
+msgid "Password"
+msgstr ""
+
+#: templates/mechanic/money.html:4 templates/mechanic/money.html:9
+#: templates/mechanic/partials/nav.html:13
+msgid "Payments"
+msgstr ""
+
+#: templates/mechanic/money.html:10
+msgid "Local Paymob ledger"
+msgstr ""
+
+#: templates/mechanic/money.html:15 templates/mechanic/money.html:36
+msgid "Today"
+msgstr ""
+
+#: templates/mechanic/money.html:24 templates/mechanic/money.html:52
+#: templates/mechanic/requests_list.html:21
+#: templates/mechanic/requests_list.html:40
+msgid "Status"
+msgstr ""
+
+#: templates/mechanic/money.html:26 templates/mechanic/money.html:35
+msgid "All"
+msgstr ""
+
+#: templates/mechanic/money.html:33 templates/mechanic/money.html:53
+#: templates/mechanic/requests_list.html:42
+msgid "Date"
+msgstr ""
+
+#: templates/mechanic/money.html:37
+msgid "7 days"
+msgstr ""
+
+#: templates/mechanic/money.html:40 templates/mechanic/requests_list.html:29
+msgid "Filter"
+msgstr ""
+
+#: templates/mechanic/money.html:51
+msgid "Amount"
+msgstr ""
+
+#: templates/mechanic/money.html:86 templates/mechanic/overview.html:83
+msgid "No payments."
+msgstr ""
+
+#: templates/mechanic/overview.html:4 templates/mechanic/overview.html:9
+#: templates/mechanic/partials/nav.html:5
+msgid "Overview"
+msgstr ""
+
+#: templates/mechanic/overview.html:34
+msgid "Today's revenue"
+msgstr ""
+
+#: templates/mechanic/overview.html:46
+msgid "Latest requests"
+msgstr ""
+
+#: templates/mechanic/overview.html:62 templates/mechanic/requests_list.html:86
+msgid "No requests."
+msgstr ""
+
+#: templates/mechanic/overview.html:67
+msgid "Latest payments"
+msgstr ""
+
+#: templates/mechanic/partials/nav.html:25
+msgid "Log out"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:4
+#: templates/mechanic/request_detail.html:10
+msgid "Request"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:12
+#: templates/mechanic/requests_list.html:23
+msgid "All requests"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:54
+msgid "Write a reply to the customer…"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:55
+msgid "Kareem reply"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:65
+msgid "Work steps"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:79
+msgid "Complete"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:107
+msgid "Quote template"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:111
+msgid "Diagnostic"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:113
+msgid "— Choose —"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:118
+msgid "Note (optional)"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:119
+msgid "Example: we can start tomorrow morning"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:121
+msgid "Send quote"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:134
+msgid "Quote"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:140
+msgid "Confirm payment"
+msgstr ""
+
+#: templates/mechanic/request_detail.html:154
+msgid "Collected"
+msgstr ""
+
+#: templates/mechanic/requests_list.html:59
+msgid "Open"
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:2
+msgid "Write your message…"
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:4
+msgid "Audio recording is not available in this browser."
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:5
+msgid ""
+"Could not access the microphone. Allow microphone access in your browser "
+"settings."
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:23
+msgid "Record audio"
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:27
+msgid "Send"
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:37
+msgid "Cancel recording"
+msgstr ""
+
+#: templates/shared/partials/chat_composer.html:49
+msgid "Send recording"
 msgstr ""
 
 #: templates/shared/partials/locale_toggle.html:2
@@ -174,10 +665,6 @@ msgstr ""
 
 #: templates/shared/partials/message_bubble.html:25
 msgid "Price quote"
-msgstr ""
-
-#: templates/shared/partials/message_bubble.html:36
-msgid "min"
 msgstr ""
 
 #: templates/shared/partials/message_bubble.html:42
@@ -193,9 +680,14 @@ msgid "Paymob checkout — waiting for account keys"
 msgstr ""
 
 #: templates/shared/partials/message_bubble.html:59
-msgid "Completed:"
+#, python-format
+msgid "Completed: %(title)s"
 msgstr ""
 
-#: templates/shared/partials/message_bubble.html:74
+#: templates/shared/partials/message_bubble.html:79
 msgid "Open order"
+msgstr ""
+
+#: templates/shared/partials/message_thread.html:5
+msgid "No messages yet."
 msgstr ""

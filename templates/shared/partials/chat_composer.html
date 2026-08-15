@@ -1,3 +1,8 @@
+{% load i18n %}
+{% trans "Write your message…" as default_placeholder %}
+{% trans "Your message" as default_aria %}
+{% trans "Audio recording is not available in this browser." as audio_unavailable %}
+{% trans "Could not access the microphone. Allow microphone access in your browser settings." as mic_denied %}
 {% csrf_token %}
 <input type="file" name="audio" id="audio-input" class="hidden" accept="audio/webm,audio/mp4,audio/ogg">
 
@@ -7,20 +12,20 @@
     name="body"
     rows="1"
     dir="auto"
-    placeholder="{{ composer_placeholder|default:'اكتب رسالتك…' }}"
-    aria-label="{{ composer_aria|default:'رسالتك' }}"
-    class="max-h-28 min-h-11 flex-1 resize-none rounded-3xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-paper placeholder:text-paper-muted/50 focus:border-copper focus:ring-copper/20"
+    placeholder="{{ composer_placeholder|default:default_placeholder }}"
+    aria-label="{{ composer_aria|default:default_aria }}"
+    class="max-h-28 min-h-11 flex-1 resize-none rounded-3xl border border-white/10 bg-black/40 px-4 py-2.5 text-start text-sm text-paper placeholder:text-paper-muted/50 focus:border-copper focus:ring-copper/20"
   ></textarea>
   <button
     type="button"
     id="mic-btn"
     class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/40 text-copper-bright transition hover:border-copper/40"
-    aria-label="تسجيل صوتي"
+    aria-label="{% trans 'Record audio' %}"
   >
     <i class="fa-solid fa-microphone"></i>
   </button>
-  <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-copper-bright to-copper-dim text-garage-950 shadow-glow transition active:scale-95" aria-label="إرسال">
-    <i class="fa-solid fa-paper-plane -scale-x-100"></i>
+  <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-copper-bright to-copper-dim text-garage-950 shadow-glow transition active:scale-95" aria-label="{% trans 'Send' %}">
+    <i class="fa-solid fa-paper-plane send-icon"></i>
   </button>
 </div>
 
@@ -29,7 +34,7 @@
     type="button"
     id="record-cancel-btn"
     class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/40 text-paper-muted transition hover:border-red-500/40 hover:text-red-300"
-    aria-label="إلغاء التسجيل"
+    aria-label="{% trans 'Cancel recording' %}"
   >
     <i class="fa-solid fa-trash-can text-sm"></i>
   </button>
@@ -41,9 +46,9 @@
     type="button"
     id="record-send-btn"
     class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-copper-bright to-copper-dim text-garage-950 shadow-glow transition active:scale-95"
-    aria-label="إرسال التسجيل"
+    aria-label="{% trans 'Send recording' %}"
   >
-    <i class="fa-solid fa-paper-plane -scale-x-100"></i>
+    <i class="fa-solid fa-paper-plane send-icon"></i>
   </button>
 </div>
 
@@ -58,6 +63,9 @@
     const recordTimer = document.getElementById('record-timer');
     const recordCancelBtn = document.getElementById('record-cancel-btn');
     const recordSendBtn = document.getElementById('record-send-btn');
+
+    const audioUnavailable = '{{ audio_unavailable|escapejs }}';
+    const micDenied = '{{ mic_denied|escapejs }}';
 
     if (!form || !micBtn) return;
 
@@ -158,7 +166,7 @@
       if (isRecording || starting) return;
 
       if (!navigator.mediaDevices?.getUserMedia) {
-        alert('التسجيل الصوتي غير متاح على هذا المتصفح.');
+        alert(audioUnavailable);
         return;
       }
 
@@ -170,7 +178,7 @@
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch {
         starting = false;
-        alert('لم نتمكن من الوصول للميكروفون. اسمح للموقع استخدام الميكروفون من إعدادات المتصفح.');
+        alert(micDenied);
         return;
       }
 
@@ -182,7 +190,7 @@
       } catch {
         starting = false;
         cleanupStream();
-        alert('التسجيل الصوتي غير متاح على هذا المتصفح.');
+        alert(audioUnavailable);
         return;
       }
 

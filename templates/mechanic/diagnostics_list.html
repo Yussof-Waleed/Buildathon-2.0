@@ -1,15 +1,16 @@
 {% extends "mechanic/base.html" %}
+{% load i18n %}
 
-{% block title %}ورشة — التشخيصات{% endblock %}
+{% block title %}{% trans "Warsha" %} — {% trans "Diagnostics" %}{% endblock %}
 
 {% block mechanic_content %}
 <section class="page-card animate-fade-up">
   <div class="flex items-center justify-between gap-2">
     <div>
-      <h1 class="text-xl font-extrabold text-paper">التشخيصات</h1>
-      <p class="mt-0.5 text-xs text-paper-muted">قوالب العروض</p>
+      <h1 class="text-xl font-extrabold text-paper">{% trans "Diagnostics" %}</h1>
+      <p class="mt-0.5 text-xs text-paper-muted">{% trans "Quote templates" %}</p>
     </div>
-    <a href="{% url 'kareem-diagnostic-create' %}" class="btn-icon btn-icon-sm no-underline" aria-label="تشخيص جديد">
+    <a href="{% url 'kareem-diagnostic-create' %}" class="btn-icon btn-icon-sm no-underline" aria-label="{% trans 'New diagnostic' %}">
       <i class="fa-solid fa-plus" aria-hidden="true"></i>
     </a>
   </div>
@@ -19,10 +20,10 @@
       <table class="w-full border-collapse text-sm">
         <thead>
           <tr class="border-b border-white/10 text-xs text-paper-muted">
-            <th class="px-2 py-2 text-start">الاسم</th>
-            <th class="px-2 py-2 text-start">السعر</th>
-            <th class="px-2 py-2 text-start">خطوات</th>
-            <th class="px-2 py-2 text-start">طلبات</th>
+            <th class="px-2 py-2 text-start">{% trans "Name" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Price" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Steps" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Requests" %}</th>
             <th class="px-2 py-2"></th>
           </tr>
         </thead>
@@ -30,15 +31,15 @@
           {% for diagnostic in diagnostics %}
             <tr class="border-b border-white/10 hover:bg-copper/5">
               <td class="px-2 py-2">{{ diagnostic.localized_title }}</td>
-              <td class="px-2 py-2 text-xs"><bdi dir="ltr">{{ diagnostic.price }}</bdi> ج</td>
+              <td class="px-2 py-2 text-xs"><bdi dir="ltr">{{ diagnostic.price }}</bdi> {% trans "EGP" %}</td>
               <td class="px-2 py-2 text-xs">{{ diagnostic.step_count }}</td>
               <td class="px-2 py-2 text-xs">{{ diagnostic.order_count }}</td>
               <td class="px-2 py-2 text-xs">
-                <a href="{% url 'kareem-diagnostic-edit' diagnostic_id=diagnostic.pk %}" class="text-copper-bright no-underline">تعديل</a>
+                <a href="{% url 'kareem-diagnostic-edit' diagnostic_id=diagnostic.pk %}" class="text-copper-bright no-underline">{% trans "Edit" %}</a>
                 {% if diagnostic.order_count == 0 %}
                   <form method="post" action="{% url 'kareem-diagnostic-delete' diagnostic_id=diagnostic.pk %}" class="inline">
                     {% csrf_token %}
-                    <button type="submit" class="ms-2 cursor-pointer border-0 bg-transparent text-red-300">حذف</button>
+                    <button type="submit" class="ms-2 cursor-pointer border-0 bg-transparent text-red-300">{% trans "Delete" %}</button>
                   </form>
                 {% endif %}
               </td>
@@ -53,14 +54,14 @@
         <li class="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm">
           <div>
             <p class="m-0 font-bold">{{ diagnostic.localized_title }}</p>
-            <p class="m-0 text-xs text-paper-muted"><bdi dir="ltr">{{ diagnostic.price }}</bdi> ج · {{ diagnostic.step_count }} خطوات</p>
+            <p class="m-0 text-xs text-paper-muted"><bdi dir="ltr">{{ diagnostic.price }}</bdi> {% trans "EGP" %} · {{ diagnostic.step_count }} {% trans "steps" %}</p>
           </div>
-          <a href="{% url 'kareem-diagnostic-edit' diagnostic_id=diagnostic.pk %}" class="text-xs text-copper-bright no-underline">تعديل</a>
+          <a href="{% url 'kareem-diagnostic-edit' diagnostic_id=diagnostic.pk %}" class="text-xs text-copper-bright no-underline">{% trans "Edit" %}</a>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="mt-3 text-sm text-paper-muted">لا توجد تشخيصات.</p>
+    <p class="mt-3 text-sm text-paper-muted">{% trans "No diagnostics." %}</p>
   {% endif %}
 </section>
 {% endblock %}
