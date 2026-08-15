@@ -84,7 +84,8 @@ Full product spec: [AGENTS.md](AGENTS.md).
 ## Later (post-demo / v1)
 
 - [ ] Full i18n (`makemessages`, `{% trans %}`)
-- [ ] WhatsApp channel
+- [x] WhatsApp inbound (Cloud API) → same Order / Conversation; Kareem manages on `/k/`
+- [x] WhatsApp outbound: quote + Paymob link, step/status replies, payment and pickup
 - [ ] LangGraph graphs (optional upgrade from one-shot prompts)
 - [ ] Transaction inquiry fallback for stuck payments
 

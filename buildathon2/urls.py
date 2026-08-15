@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.urls import include, path
 
 from jobs.views import home
+from jobs.whatsapp.views import whatsapp_webhook
 from payments import views as payment_views
 from payments.paymob_config import get_paymob_readiness
 
@@ -31,6 +32,7 @@ urlpatterns = [
     path('k/', include('jobs.kareem_urls')),
     path('api/', include('payments.urls')),
     path('webhooks/paymob/', payment_views.paymob_webhook, name='paymob-webhook'),
+    path('webhooks/whatsapp/', whatsapp_webhook, name='whatsapp-webhook'),
     path('health/', health, name='health'),
     path('admin/', admin.site.urls),
 ]

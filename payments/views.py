@@ -9,12 +9,11 @@ from django.views.decorators.http import require_POST
 
 from accounts.customer_session import get_customer, require_customer
 from jobs.models import Order
-from payments.models import Payment
-from payments.paymob import PaymobAPIError, PaymobNotConfiguredError, create_payment_intention
 from payments.hmac import verify_transaction_hmac
 from payments.services import (
     apply_failed_payment,
     apply_successful_payment,
+    ensure_checkout_url,
     extract_order_id_from_callback,
 )
 
@@ -29,32 +28,10 @@ def checkout(request, order_id):
         messages.error(request, _('This order cannot be paid.'))
         return redirect('customer-order-detail', order_id=order.pk)
 
-    try:
-        checkout_url, intention_id = create_payment_intention(order)
-    except PaymobNotConfiguredError as exc:
-        messages.error(request, str(exc))
+    checkout_url = ensure_checkout_url(order)
+    if not checkout_url:
+        messages.error(request, _('Paymob keys not configured.'))
         return redirect('customer-order-detail', order_id=order.pk)
-    except PaymobAPIError as exc:
-        messages.error(request, _('Paymob error: %(detail)s') % {'detail': exc})
-        return redirect('customer-order-detail', order_id=order.pk)
-
-    amount_piasters = int(order.quoted_price * 100)
-    pending = Payment.objects.filter(
-        order=order,
-        status=Payment.Status.PENDING,
-    ).order_by('-created_at').first()
-
-    if pending:
-        pending.amount_piasters = amount_piasters
-        pending.paymob_intention_id = intention_id
-        pending.save()
-    else:
-        Payment.objects.create(
-            order=order,
-            amount_piasters=amount_piasters,
-            status=Payment.Status.PENDING,
-            paymob_intention_id=intention_id,
-        )
 
     return redirect(checkout_url)
 

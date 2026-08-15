@@ -1,9 +1,13 @@
 """Payment state transitions — webhook is source of truth."""
 
+import logging
+
 from django.db import IntegrityError, transaction
 
 from jobs.models import Conversation, Message, Order
 from payments.models import Payment
+
+logger = logging.getLogger(__name__)
 
 
 def _ensure_conversation(order: Order) -> Conversation:
@@ -60,6 +64,10 @@ def apply_successful_payment(
             channel=Message.Channel.WEB,
         )
 
+    # Late import: jobs.whatsapp.events pulls checkout helpers from this module.
+    from jobs.whatsapp.events import notify_paid
+
+    notify_paid(order)
     return True
 
 
@@ -134,3 +142,43 @@ def extract_order_id_from_callback(obj: dict) -> int | None:
         except (TypeError, ValueError):
             continue
     return None
+
+
+def ensure_checkout_url(order: Order) -> str | None:
+    """Create a Paymob Unified Checkout URL and keep a pending Payment row."""
+    if order.status != Order.Status.QUOTED or order.quoted_price is None:
+        return None
+
+    from payments.paymob import (
+        PaymobAPIError,
+        PaymobNotConfiguredError,
+        create_payment_intention,
+    )
+
+    try:
+        checkout_url, intention_id = create_payment_intention(order)
+    except PaymobNotConfiguredError:
+        logger.info('Paymob is not configured — skipping checkout URL for order %s', order.pk)
+        return None
+    except PaymobAPIError:
+        logger.exception('Paymob intention failed for order %s', order.pk)
+        return None
+
+    amount_piasters = int(order.quoted_price * 100)
+    pending = Payment.objects.filter(
+        order=order,
+        status=Payment.Status.PENDING,
+    ).order_by('-created_at').first()
+
+    if pending:
+        pending.amount_piasters = amount_piasters
+        pending.paymob_intention_id = intention_id
+        pending.save(update_fields=['amount_piasters', 'paymob_intention_id'])
+    else:
+        Payment.objects.create(
+            order=order,
+            amount_piasters=amount_piasters,
+            status=Payment.Status.PENDING,
+            paymob_intention_id=intention_id,
+        )
+    return checkout_url

@@ -2,12 +2,18 @@
 {% if message.author_type == 'customer' %}
   <div class="msg-row msg-row-customer {% if viewer == 'kareem' %}msg-row-kareem-view{% endif %}">
     <div class="msg-bubble msg-bubble-customer">
+      {% if message.channel == 'whatsapp' %}
+        <p class="msg-channel-label">{% trans "WhatsApp" %}</p>
+      {% endif %}
       {% if message.body %}
         <p class="m-0 whitespace-pre-wrap" dir="auto">{{ message.body }}</p>
       {% endif %}
       {% if message.audio %}
+        {% if not message.body %}
+          <p class="m-0 text-xs opacity-80">{% trans "Voice note" %}</p>
+        {% endif %}
         <audio controls class="audio-compact mt-2" preload="metadata">
-          <source src="{{ message.audio.url }}">
+          <source src="{{ message.audio.url }}" type="{{ message.audio_content_type }}">
         </audio>
       {% endif %}
     </div>
@@ -84,7 +90,7 @@
 
       {% if message.audio %}
         <audio controls class="audio-compact mt-2" preload="metadata">
-          <source src="{{ message.audio.url }}">
+          <source src="{{ message.audio.url }}" type="{{ message.audio_content_type }}">
         </audio>
       {% endif %}
     </div>

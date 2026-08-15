@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -11,6 +12,12 @@ from django.utils.translation import gettext as _
 from accounts.models import Customer
 from catalog.models import Diagnostic
 from jobs.models import Conversation, Message, Order, OrderStep
+from jobs.whatsapp.events import (
+    notify_mechanic_reply,
+    notify_quote,
+    notify_ready,
+    notify_step_done,
+)
 
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
 
@@ -72,6 +79,8 @@ def create_order_from_intake(
     body: str,
     audio=None,
     conversation: Conversation | None = None,
+    channel: str = Message.Channel.WEB,
+    wa_message_id: str | None = None,
 ) -> Order:
     """Dumb intake: bind the current conversation to a new pending_review order."""
     if conversation is None:
@@ -83,7 +92,8 @@ def create_order_from_intake(
             author_type=Message.AuthorType.CUSTOMER,
             body=body.strip(),
             audio=audio,
-            channel=Message.Channel.WEB,
+            channel=channel,
+            wa_message_id=wa_message_id,
         )
         return conversation.order
 
@@ -98,7 +108,8 @@ def create_order_from_intake(
         author_type=Message.AuthorType.CUSTOMER,
         body=body.strip(),
         audio=audio,
-        channel=Message.Channel.WEB,
+        channel=channel,
+        wa_message_id=wa_message_id,
     )
     return order
 
@@ -154,6 +165,7 @@ def snapshot_diagnostic_on_order(
         channel=Message.Channel.WEB,
     )
 
+    notify_quote(order)
     return order
 
 
@@ -187,6 +199,9 @@ def complete_order_step(order: Order, step_id: int) -> Order:
             body='__ready__',
             channel=Message.Channel.WEB,
         )
+        notify_ready(order)
+    else:
+        notify_step_done(order, step.localized_title)
 
     return order
 
@@ -210,6 +225,7 @@ def mark_ready_for_pickup(order: Order) -> Order:
         channel=Message.Channel.WEB,
     )
 
+    notify_ready(order)
     return order
 
 
@@ -229,6 +245,10 @@ def mark_order_completed(order: Order) -> Order:
         channel=Message.Channel.WEB,
     )
 
+    notify_mechanic_reply(
+        order,
+        _('تم استلام العربية — شكراً لثقتك في ورشة كريم.'),
+    )
     return order
 
 
@@ -343,13 +363,21 @@ def _fork_conversation_for_new_order(
 def post_mechanic_message(order: Order, body: str, audio=None) -> Message:
     assert_order_chat_open(order)
     conversation = _ensure_conversation(order)
-    return Message.objects.create(
+    message = Message.objects.create(
         conversation=conversation,
         author_type=Message.AuthorType.MECHANIC,
         body=body.strip(),
         audio=audio,
         channel=Message.Channel.WEB,
     )
+    text = body.strip()
+    if not text and audio:
+        text = _('كريم بعت تسجيل صوتي — تقدر تسمعه من صفحة الطلب:') + (
+            f'\n{settings.SITE_URL}/orders/{order.pk}/'
+        )
+    if text:
+        notify_mechanic_reply(order, text)
+    return message
 
 
 def _labeler_text_for_message(customer_message: Message, body: str) -> str:
@@ -377,6 +405,8 @@ def process_chat_message(
     body: str,
     audio=None,
     conversation: Conversation | None = None,
+    channel: str = Message.Channel.WEB,
+    wa_message_id: str | None = None,
 ) -> ProcessChatResult:
     """
     Save on the current conversation, then Labeler binds, stays, or forks.
@@ -392,7 +422,12 @@ def process_chat_message(
 
     if not is_llm_configured():
         order = create_order_from_intake(
-            customer, body, audio=audio, conversation=conversation,
+            customer,
+            body,
+            audio=audio,
+            conversation=conversation,
+            channel=channel,
+            wa_message_id=wa_message_id,
         )
         return ProcessChatResult(
             route='dumb_fallback',
@@ -405,7 +440,8 @@ def process_chat_message(
         author_type=Message.AuthorType.CUSTOMER,
         body=body.strip(),
         audio=audio,
-        channel=Message.Channel.WEB,
+        channel=channel,
+        wa_message_id=wa_message_id,
     )
 
     labeler_text = _labeler_text_for_message(customer_message, body)

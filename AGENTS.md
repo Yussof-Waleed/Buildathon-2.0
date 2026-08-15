@@ -74,8 +74,9 @@ flowchart LR
 | `/orders/` | Customer orders list |
 | `/orders/<id>/` | Customer order detail |
 | `/k/` | Kareem portal root |
-| `/api/` | REST (Paymob checkout, future WhatsApp) |
+| `/api/` | REST (Paymob checkout) |
 | `/webhooks/paymob/` | Paymob callback (CSRF-exempt, HMAC-verified) |
+| `/webhooks/whatsapp/` | WhatsApp Cloud API callback (CSRF-exempt, Meta verify + signature) |
 
 ---
 
@@ -318,11 +319,13 @@ When auditing webhook code, use Cursor command `/paymob-check-hmac`.
   - Step completed
   - Ready for pickup
 
-### Later (WhatsApp)
+### WhatsApp (Cloud API)
 
-- `Message.channel` field already supports `whatsapp`
-- Notify interface: implement `web` now, stub `whatsapp`
-- **Do not build WhatsApp integration in v1**
+- Same `Customer` / `Conversation` / `Order` / `Message` as the web portal — no parallel Job model
+- `Message.channel=whatsapp` on inbound customer messages; `wa_message_id` for webhook idempotency
+- Phone from WhatsApp `wa_id` stored as E.164 (`+…`)
+- Outbound (only if the customer already wrote on WhatsApp): quote + Paymob checkout URL, step/progress replies, payment success, ready for pickup, Kareem’s chat replies
+- Unofficial clients (Baileys / go-whatsapp) stay out of scope
 
 ---
 
@@ -383,7 +386,7 @@ static/
 - Invent a second source of truth for step ETA
 - Commit secrets or read `.env` into chat
 - Hardcode user-facing strings (use i18n)
-- Build WhatsApp in v1
+- Create a parallel `Job` / `Request` model for WhatsApp — inbound uses `Order` / `Conversation` / `Message`
 
 ### Dependencies note
 
@@ -430,7 +433,7 @@ curl http://127.0.0.1:8000/   # {"status":"ok"}
 
 ## 13. What is out of scope for v1
 
-- WhatsApp send/receive
+- Unofficial WhatsApp clients (Baileys, go-whatsapp, WhatsApp Web reverse-engineering)
 - OTP / phone verification
 - Multi-garage / marketplace
 - Customer accounts with email/password

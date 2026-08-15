@@ -37,6 +37,7 @@
           <tr class="border-b border-white/10 text-xs text-paper-muted">
             <th class="px-2 py-2 text-start">#</th>
             <th class="px-2 py-2 text-start">{% trans "Customer" %}</th>
+            <th class="px-2 py-2 text-start">{% trans "Source" %}</th>
             <th class="px-2 py-2 text-start">{% trans "Status" %}</th>
             <th class="px-2 py-2 text-start">{% trans "Labels" %}</th>
             <th class="px-2 py-2 text-start">{% trans "Date" %}</th>
@@ -48,6 +49,9 @@
             <tr class="border-b border-white/10 transition hover:bg-copper/5">
               <td class="px-2 py-2"><bdi dir="ltr">{{ order.pk }}</bdi></td>
               <td class="px-2 py-2"><bdi dir="ltr">{{ order.customer.phone }}</bdi></td>
+              <td class="px-2 py-2 text-xs">
+                {% if order.from_whatsapp %}{% trans "WhatsApp" %}{% else %}{% trans "Web" %}{% endif %}
+              </td>
               <td class="px-2 py-2 text-xs">{{ order.get_status_display }}</td>
               <td class="px-2 py-2 text-xs">
                 {% for label in order.labels.all %}
@@ -69,7 +73,11 @@
         <a href="{% url 'kareem-request-detail' order_id=order.pk %}" class="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 px-3 py-3 no-underline">
           <div>
             <strong class="text-sm text-paper"><bdi dir="ltr">#{{ order.pk }}</bdi></strong>
-            <p class="text-xs text-paper-muted"><bdi dir="ltr">{{ order.customer.phone }}</bdi> · {{ order.get_status_display }}</p>
+            <p class="text-xs text-paper-muted">
+              <bdi dir="ltr">{{ order.customer.phone }}</bdi>
+              · {% if order.from_whatsapp %}{% trans "WhatsApp" %}{% else %}{% trans "Web" %}{% endif %}
+              · {{ order.get_status_display }}
+            </p>
             {% if order.labels.all %}
               <p class="mt-1 flex flex-wrap gap-1">
                 {% for label in order.labels.all %}

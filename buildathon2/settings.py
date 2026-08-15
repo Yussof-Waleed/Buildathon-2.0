@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 
@@ -48,9 +49,12 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() in ('1', 'true', 'yes')
 
+_DEFAULT_ALLOWED_HOSTS = (
+    'localhost,127.0.0.1,.ngrok-free.dev,.ngrok-free.app,.ngrok.io,.trycloudflare.com'
+)
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', _DEFAULT_ALLOWED_HOSTS).split(',')
     if host.strip()
 ]
 
@@ -84,7 +88,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'catalog',
-    'jobs',
+    'jobs.apps.JobsConfig',
     'payments',
     'ai',
 ]
@@ -181,7 +185,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 STORAGES = {
@@ -201,8 +205,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/k/login/'
 LOGIN_REDIRECT_URL = '/k/'
 
-# Site URL (for Paymob redirects and default notification URL)
+# Site URL (for Paymob redirects, WhatsApp webhooks, default notification URL)
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+_site_host = urlparse(SITE_URL).hostname
+if _site_host and _site_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_site_host)
 
 # Paymob (test/live keys from dashboard)
 PAYMOB_SECRET_KEY = os.environ.get('PAYMOB_SECRET_KEY', '')
@@ -220,3 +227,14 @@ PAYMOB_REDIRECTION_URL = os.environ.get('PAYMOB_REDIRECTION_URL', '')
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 GROQ_MODEL = os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile')
 GROQ_STT_MODEL = os.environ.get('GROQ_STT_MODEL', 'whisper-large-v3-turbo')
+
+# WhatsApp Cloud API (Meta) — inbound channel; same Customer / Conversation / Order
+WHATSAPP_PHONE_ID = os.environ.get('WHATSAPP_PHONE_ID', '')
+WHATSAPP_TOKEN = os.environ.get('WHATSAPP_TOKEN', '')
+WHATSAPP_VERIFY_TOKEN = os.environ.get(
+    'WHATSAPP_VERIFY_TOKEN',
+    'buildathon-verify-token',
+)
+WHATSAPP_APP_ID = os.environ.get('WHATSAPP_APP_ID', '')
+WHATSAPP_APP_SECRET = os.environ.get('WHATSAPP_APP_SECRET', '')
+WHATSAPP_BUSINESS_ACCOUNT_ID = os.environ.get('WHATSAPP_BUSINESS_ACCOUNT_ID', '')

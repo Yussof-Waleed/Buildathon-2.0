@@ -167,6 +167,13 @@ class Message(models.Model):
         choices=Channel.choices,
         default=Channel.WEB,
     )
+    wa_message_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='WhatsApp Cloud API message id; webhook idempotency.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -175,3 +182,16 @@ class Message(models.Model):
     def __str__(self):
         preview = (self.body or 'audio')[:40]
         return f'{self.author_type}: {preview}'
+
+    @property
+    def audio_content_type(self) -> str:
+        name = (self.audio.name or '').lower()
+        if name.endswith('.webm'):
+            return 'audio/webm'
+        if name.endswith('.mp3'):
+            return 'audio/mpeg'
+        if name.endswith('.m4a') or name.endswith('.mp4'):
+            return 'audio/mp4'
+        if name.endswith('.ogg') or name.endswith('.opus'):
+            return 'audio/ogg'
+        return 'audio/ogg'

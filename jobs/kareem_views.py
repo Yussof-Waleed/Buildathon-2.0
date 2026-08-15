@@ -4,13 +4,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.exceptions import ValidationError
+from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from catalog.models import Diagnostic
 from jobs.kareem_analytics import order_status_counts, payment_summary
-from jobs.models import Order
+from jobs.models import Message, Order
 from jobs.services import (
     _get_conversation,
     complete_order_step,
@@ -104,7 +105,18 @@ def kareem_money(request):
 @staff_required
 def kareem_requests_list(request):
     status_filter = request.GET.get('status', '').strip()
-    orders = Order.objects.select_related('customer').prefetch_related('labels').order_by('-created_at')
+    from_whatsapp = Exists(
+        Message.objects.filter(
+            conversation__order_id=OuterRef('pk'),
+            channel=Message.Channel.WHATSAPP,
+        )
+    )
+    orders = (
+        Order.objects.select_related('customer')
+        .prefetch_related('labels')
+        .annotate(from_whatsapp=from_whatsapp)
+        .order_by('-created_at')
+    )
     if status_filter:
         orders = orders.filter(status=status_filter)
 
@@ -139,6 +151,9 @@ def kareem_request_detail(request, order_id):
     )
     conversation = _get_conversation(order)
     message_list = conversation.messages.all() if conversation else []
+    from_whatsapp = any(
+        message.channel == Message.Channel.WHATSAPP for message in message_list
+    )
     diagnostics = Diagnostic.objects.prefetch_related('steps').order_by('title_ar')
     can_quote = order.status == Order.Status.PENDING_REVIEW
     can_confirm_paid = order.status == Order.Status.QUOTED
@@ -153,6 +168,7 @@ def kareem_request_detail(request, order_id):
         {
             'nav_active': 'requests',
             'order': order,
+            'from_whatsapp': from_whatsapp,
             'thread_messages': message_list,
             'diagnostics': diagnostics,
             'can_quote': can_quote,
