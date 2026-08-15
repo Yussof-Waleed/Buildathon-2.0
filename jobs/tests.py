@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -167,6 +168,40 @@ class StartWorkAfterPaymentTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, Order.Status.IN_PROGRESS)
+
+
+class PaymobReturnUrlTests(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(phone='+201011110000')
+        self.order = Order.objects.create(
+            customer=self.customer,
+            status=Order.Status.QUOTED,
+        )
+        session = self.client.session
+        session[SESSION_KEY] = self.customer.pk
+        session.save()
+        self.url = reverse('customer-order-detail', args=[self.order.pk])
+
+    def test_paymob_query_string_is_stripped(self):
+        response = self.client.get(
+            self.url,
+            {
+                'paid': 'return',
+                'success': 'true',
+                'hmac': 'd0bc8d7ee95b2108c0a8432bf38a7abe',
+                'id': '516006767',
+                'amount_cents': '55000',
+                'merchant_order_id': str(self.order.pk),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.url)
+        stored = [str(message) for message in get_messages(response.wsgi_request)]
+        self.assertTrue(stored)
+
+    def test_clean_order_url_is_not_redirected(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
 
 
 @override_settings(GROQ_API_KEY='')

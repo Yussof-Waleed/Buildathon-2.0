@@ -484,7 +484,7 @@ msgstr ""
 msgid "New chat"
 msgstr "New chat"
 
-#: templates/customer/order_detail.html:38
+#: jobs/views.py:177
 msgid "Checking payment… refresh in a moment."
 msgstr ""
 

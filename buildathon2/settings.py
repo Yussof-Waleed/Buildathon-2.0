@@ -57,15 +57,23 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', _DEFAULT_ALLOWED_HOSTS).split(',')
     if host.strip()
 ]
+# Quick tunnels rotate hostnames on restart; always accept any *.trycloudflare.com.
+if '.trycloudflare.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('.trycloudflare.com')
 
+_DEFAULT_CSRF_TRUSTED_ORIGINS = (
+    'http://localhost:8000,http://127.0.0.1:8000,https://*.trycloudflare.com'
+)
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         'DJANGO_CSRF_TRUSTED_ORIGINS',
-        'http://localhost:8000,http://127.0.0.1:8000',
+        _DEFAULT_CSRF_TRUSTED_ORIGINS,
     ).split(',')
     if origin.strip()
 ]
+if 'https://*.trycloudflare.com' not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append('https://*.trycloudflare.com')
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True

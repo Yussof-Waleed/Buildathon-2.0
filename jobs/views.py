@@ -22,6 +22,22 @@ ACTIVE_POLL_STATUSES = frozenset({
     Order.Status.READY_FOR_PICKUP,
 })
 
+# Paymob appends transaction fields to redirection_url. Never keep them in the
+# address bar, and never treat them as payment truth.
+_PAYMOB_RETURN_QUERY_KEYS = frozenset({
+    'hmac',
+    'success',
+    'amount_cents',
+    'txn_response_code',
+    'merchant_order_id',
+})
+
+
+def _is_paymob_redirection(request) -> bool:
+    if request.GET.get('paid') == 'return':
+        return True
+    return any(key in request.GET for key in _PAYMOB_RETURN_QUERY_KEYS)
+
 
 def home(request):
     return render(request, 'shared/home.html')
@@ -155,8 +171,11 @@ def customer_order_detail(request, order_id):
         Order.Status.QUOTED,
     )
     show_agreement = order.quoted_price is not None
-    payment_return = request.GET.get('paid') == 'return'
     poll_thread = order.status in ACTIVE_POLL_STATUSES
+
+    if _is_paymob_redirection(request):
+        messages.success(request, _('Checking payment… refresh in a moment.'))
+        return redirect('customer-order-detail', order_id=order.pk)
 
     return render(
         request,
@@ -168,7 +187,6 @@ def customer_order_detail(request, order_id):
             'thread_messages': messages_list,
             'can_cancel': can_cancel,
             'show_agreement': show_agreement,
-            'payment_return': payment_return,
             'poll_thread': poll_thread,
         },
     )

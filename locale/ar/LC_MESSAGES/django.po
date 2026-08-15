@@ -477,7 +477,7 @@ msgstr "كل طلباتي"
 msgid "New chat"
 msgstr "محادثة جديدة"
 
-#: templates/customer/order_detail.html:38
+#: jobs/views.py:177
 msgid "Checking payment… refresh in a moment."
 msgstr "جاري التحقق من الدفع… حدّث الصفحة بعد لحظات."
 

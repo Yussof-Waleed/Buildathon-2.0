@@ -30,10 +30,6 @@
       </ul>
     {% endif %}
 
-    {% if payment_return %}
-      <c-alert type="success">{% trans "Checking payment… refresh in a moment." %}</c-alert>
-    {% endif %}
-
     {% if order.status == 'cancelled' %}
       <c-alert type="error">
         <i class="fa-solid fa-ban me-1.5"></i>{% trans "This chat is closed — the order was cancelled." %}

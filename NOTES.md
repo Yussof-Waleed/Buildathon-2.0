@@ -46,7 +46,7 @@ curl http://127.0.0.1:8000/health/
 ## Paymob (when onboarded)
 
 - Set `PAYMOB_SECRET_KEY` (`egy_sk_test_…`), `PAYMOB_PUBLIC_KEY`, `PAYMOB_HMAC_SECRET`
-- Tunnel URL in `.env`: `SITE_URL`, `PAYMOB_NOTIFICATION_URL`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`
+- Tunnel URL in `.env`: `SITE_URL`, `PAYMOB_NOTIFICATION_URL` (hosts: `.trycloudflare.com` / `https://*.trycloudflare.com` are always allowed)
 - Webhook: `POST /webhooks/paymob/` — HMAC verified, idempotent
 
 ## Dev commands
