@@ -114,7 +114,7 @@ def piasters_egp(piasters) -> str:
     return f'{int(piasters) / 100:.2f}'
 
 
-def _message_bubble_context(message, order=None, paymob_ready=False, viewer='customer'):
+def _message_bubble_context(message, order=None, viewer='customer'):
     body = message.body or ''
     kind = _message_kind(body)
     ctx = {
@@ -122,18 +122,10 @@ def _message_bubble_context(message, order=None, paymob_ready=False, viewer='cus
         'kind': kind,
         'viewer': viewer,
         'order': order,
-        'paymob_ready': paymob_ready,
         'show_pay': (
             kind == 'quote'
             and order is not None
             and order.status == 'quoted'
-            and paymob_ready
-        ),
-        'show_pay_waiting': (
-            kind == 'quote'
-            and order is not None
-            and order.status == 'quoted'
-            and not paymob_ready
         ),
     }
     if kind == 'quote':
@@ -159,9 +151,9 @@ def _message_bubble_context(message, order=None, paymob_ready=False, viewer='cus
 
 
 @register.simple_tag(takes_context=True)
-def message_bubble(context, message, order=None, paymob_ready=False, viewer='customer'):
+def message_bubble(context, message, order=None, viewer='customer'):
     # Inclusion tags copy RequestContext and crash on Python 3.14 + Django 5.1.
-    ctx = _message_bubble_context(message, order, paymob_ready, viewer)
+    ctx = _message_bubble_context(message, order, viewer)
     ctx['csrf_token'] = context.get('csrf_token')
     return mark_safe(
         render_to_string(

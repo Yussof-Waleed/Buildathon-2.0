@@ -1,7 +1,7 @@
 {% load warsha_ui i18n %}
 <c-vars viewer="customer" />
 {% for message in thread_messages %}
-  {% message_bubble message order=order paymob_ready=paymob_ready|default:False viewer=viewer %}
+  {% message_bubble message order=order viewer=viewer %}
 {% empty %}
   <p class="text-sm text-paper-muted">{% trans "No messages yet." %}</p>
 {% endfor %}

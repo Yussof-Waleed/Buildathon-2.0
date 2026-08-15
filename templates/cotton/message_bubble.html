@@ -54,8 +54,6 @@
                 {% trans "Pay" %} <bdi dir="ltr">{{ quote.price }}</bdi> {% trans "EGP" %}
               </c-btn-pill>
             </form>
-          {% elif show_pay_waiting %}
-            <p class="msg-quote-waiting">{% trans "Paymob checkout — waiting for account keys" %}</p>
           {% endif %}
         </div>
       {% elif kind == 'step' %}

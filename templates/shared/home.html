@@ -6,7 +6,7 @@
 
 {% block content %}
 {% trans "Describe your car" as step1_title %}
-{% trans "Message Kareem with text and an engine voice note." as step1_body %}
+{% trans "Message Kareem with text or an engine voice note." as step1_body %}
 {% trans "Clear quote & pay" as step2_title %}
 {% trans "See the price, pay online, work starts after payment." as step2_body %}
 {% trans "Track & collect" as step3_title %}
@@ -78,15 +78,9 @@
     <c-trust-pill icon="fa-solid fa-tags">{% trans "Clear pricing" %}</c-trust-pill>
     <c-trust-pill icon="fa-solid fa-bell">{% trans "Live updates" %}</c-trust-pill>
     <c-trust-pill icon="fa-solid fa-location-dot">{% trans "Shubra neighbourhood" %}</c-trust-pill>
-    {% if paymob.ready %}
-      <c-trust-pill icon="fa-solid fa-circle-check" class="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
-        {% trans "Payments ready" %}
-      </c-trust-pill>
-    {% else %}
-      <c-trust-pill icon="fa-solid fa-hourglass-half" class="border-amber-500/30 bg-amber-500/10 text-amber-200">
-        {% trans "Payments awaiting setup" %}
-      </c-trust-pill>
-    {% endif %}
+    <c-trust-pill icon="fa-solid fa-circle-check" class="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+      {% trans "Payments ready" %}
+    </c-trust-pill>
   </div>
 </section>
 

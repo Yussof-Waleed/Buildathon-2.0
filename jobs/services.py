@@ -414,13 +414,9 @@ def _customer_intake_parts(conversation: Conversation) -> tuple[bool, bool]:
 
 
 def _intake_incomplete_prompt(has_text: bool, has_audio: bool) -> str | None:
-    if has_text and has_audio:
+    if has_text or has_audio:
         return None
-    if has_text:
-        return _('وصلنا وصفك — ابعت كمان تسجيل صوتي لصوت المحرك أو المشكلة.')
-    if has_audio:
-        return _('وصلنا التسجيل — اكتب كمان وصف للمشكلة في رسالة.')
-    return _('ابعت وصف مكتوب وتسجيل صوتي للمشكلة.')
+    return _('ابعت وصف مكتوب أو تسجيل صوتي للمشكلة.')
 
 
 def _labeler_text_for_intake(conversation: Conversation) -> str:
