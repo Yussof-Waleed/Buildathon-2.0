@@ -17,6 +17,23 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, _, value = line.partition('=')
+        value = value.strip().strip('"').strip("'")
+        if not value:
+            continue
+        os.environ.setdefault(key.strip(), value)
+
+
+_load_dotenv(BASE_DIR / '.env')
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -62,12 +79,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'accounts',
+    'catalog',
+    'jobs',
+    'payments',
+    'ai',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -80,14 +104,16 @@ ROOT_URLCONF = 'buildathon2.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.customer_session',
             ],
         },
     },
@@ -129,9 +155,16 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ar'
 
-TIME_ZONE = 'UTC'
+LANGUAGES = [
+    ('ar', 'Arabic'),
+    ('en', 'English'),
+]
+
+LOCALE_PATHS = [BASE_DIR / 'locale']
+
+TIME_ZONE = 'Africa/Cairo'
 
 USE_I18N = True
 
@@ -143,6 +176,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
@@ -156,3 +194,24 @@ STORAGES = {
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/k/login/'
+LOGIN_REDIRECT_URL = '/k/'
+
+# Site URL (for Paymob redirects and default notification URL)
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+
+# Paymob (test/live keys from dashboard)
+PAYMOB_SECRET_KEY = os.environ.get('PAYMOB_SECRET_KEY', '')
+PAYMOB_PUBLIC_KEY = os.environ.get('PAYMOB_PUBLIC_KEY', '')
+PAYMOB_API_KEY = os.environ.get('PAYMOB_API_KEY', '')
+PAYMOB_HMAC_SECRET = os.environ.get('PAYMOB_HMAC_SECRET', '')
+PAYMOB_INTEGRATION_ID_CARD = os.environ.get('PAYMOB_INTEGRATION_ID_CARD', '')
+PAYMOB_NOTIFICATION_URL = os.environ.get(
+    'PAYMOB_NOTIFICATION_URL',
+    f'{SITE_URL}/webhooks/paymob/',
+)
+PAYMOB_REDIRECTION_URL = os.environ.get('PAYMOB_REDIRECTION_URL', '')
+
+# Cursor LLM (Labeler / Tagger)
+CURSOR_API_KEY = os.environ.get('CURSOR_API_KEY', '')

@@ -1,0 +1,88 @@
+{% extends "mechanic/base.html" %}
+{% load warsha_ui %}
+
+{% block title %}ورشة — نظرة عامة{% endblock %}
+
+{% block mechanic_content %}
+<section class="animate-fade-up space-y-4">
+  <div>
+    <h1 class="text-xl font-extrabold text-paper">نظرة عامة</h1>
+    <p class="mt-0.5 text-xs text-paper-muted">لوحة كريم</p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
+      <p class="text-[0.65rem] text-paper-muted">قيد المراجعة</p>
+      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.pending_review }}</p>
+    </div>
+    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
+      <p class="text-[0.65rem] text-paper-muted">بانتظار الدفع</p>
+      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.quoted }}</p>
+    </div>
+    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
+      <p class="text-[0.65rem] text-paper-muted">جاري الشغل</p>
+      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.in_progress }}</p>
+    </div>
+    <div class="rounded-lg border border-white/10 bg-black/25 p-3">
+      <p class="text-[0.65rem] text-paper-muted">جاهزة للاستلام</p>
+      <p class="mt-0.5 text-xl font-bold text-copper-bright">{{ status_counts.ready_for_pickup }}</p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    <span class="rounded-full border border-copper/30 bg-copper/10 px-2.5 py-1 text-xs">
+      إيراد اليوم <strong class="text-copper-bright"><bdi dir="ltr">{{ pay_summary.today_paid_piasters|piasters_egp }}</bdi> ج</strong>
+    </span>
+    <span class="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-xs text-paper-muted">
+      معلقة <strong class="text-paper">{{ pay_summary.pending_count }}</strong>
+    </span>
+    <span class="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-xs text-paper-muted">
+      فشل <strong class="text-red-300">{{ pay_summary.failed_today }}</strong>
+    </span>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="page-card !p-4">
+      <h2 class="mb-2 text-sm font-bold text-paper">آخر الطلبات</h2>
+      {% if recent_orders %}
+        <ul class="space-y-1">
+          {% for order in recent_orders %}
+            <li class="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-2.5 py-2 text-xs">
+              <span>
+                <a href="{% url 'kareem-request-detail' order_id=order.pk %}" class="font-bold text-copper-bright no-underline">
+                  #<bdi dir="ltr">{{ order.pk }}</bdi>
+                </a>
+                <span class="text-paper-muted"> · <bdi dir="ltr">{{ order.customer.phone }}</bdi></span>
+              </span>
+              <span class="text-paper-muted">{{ order.status|status_ar }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-xs text-paper-muted">لا توجد طلبات.</p>
+      {% endif %}
+    </div>
+
+    <div class="page-card !p-4">
+      <h2 class="mb-2 text-sm font-bold text-paper">آخر المدفوعات</h2>
+      {% if recent_payments %}
+        <ul class="space-y-1">
+          {% for payment in recent_payments %}
+            <li class="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-2.5 py-2 text-xs">
+              <span>
+                <a href="{% url 'kareem-request-detail' order_id=payment.order_id %}" class="text-copper-bright no-underline">
+                  #<bdi dir="ltr">{{ payment.order_id }}</bdi>
+                </a>
+                <span class="text-paper-muted"> · <bdi dir="ltr">{{ payment.amount_piasters|piasters_egp }}</bdi> ج</span>
+              </span>
+              <span class="font-en uppercase text-paper-muted" lang="en">{{ payment.get_status_display }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-xs text-paper-muted">لا توجد مدفوعات.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

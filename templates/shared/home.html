@@ -1,0 +1,43 @@
+{% extends "shared/base.html" %}
+
+{% block title %}ورشة — Warsha{% endblock %}
+{% block page_class %}{% endblock %}
+
+{% block content %}
+<section class="relative flex min-h-[calc(100dvh-57px)] flex-col items-center justify-center px-5 py-12 text-center">
+  <div class="pointer-events-none absolute h-72 w-72 animate-pulse-slow rounded-full bg-[radial-gradient(circle,rgba(232,160,102,0.25),transparent_70%)] blur-3xl" aria-hidden="true"></div>
+
+  <h1 class="animate-fade-up bg-gradient-to-b from-paper to-copper-bright bg-clip-text text-5xl font-black leading-tight text-transparent sm:text-6xl">
+    ورشة
+  </h1>
+  <p class="animate-fade-up animate-delay-1 mt-3 max-w-xs text-paper-muted">
+    ورشة كريم في شبرا — صيانة بثقة
+  </p>
+
+  <div class="animate-fade-up animate-delay-2 mt-8 grid w-full max-w-sm gap-3">
+    <a href="{% url 'customer-chat' %}" class="group flex items-center gap-3 rounded-xl border border-copper/30 bg-gradient-to-br from-copper/20 to-copper/5 p-4 text-paper no-underline backdrop-blur transition hover:border-copper-bright/50">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/30 text-lg text-copper-bright" aria-hidden="true"><i class="fa-solid fa-mobile-screen-button"></i></span>
+      <span class="text-start">
+        <strong class="block text-base">عميل</strong>
+        <span class="font-en text-xs text-paper-muted">Customer — chat &amp; orders</span>
+      </span>
+    </a>
+    <a href="{% url 'kareem-overview' %}" class="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-paper no-underline backdrop-blur transition hover:border-copper/30">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/30 text-lg text-copper-bright" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+      <span class="text-start">
+        <strong class="block text-base">كريم</strong>
+        <span class="font-en text-xs text-paper-muted">Kareem — requests &amp; quotes</span>
+      </span>
+    </a>
+  </div>
+
+  <p class="animate-fade-up animate-delay-3 mt-10 font-en text-xs uppercase tracking-widest text-paper-muted">
+    {% if paymob.ready %}
+      <span class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-emerald-300 normal-case">Paymob: جاهز</span>
+    {% else %}
+      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-300 normal-case">Paymob: في انتظار المفاتيح</span>
+    {% endif %}
+    · Built for Buildathon 2.0
+  </p>
+</section>
+{% endblock %}

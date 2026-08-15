@@ -1,0 +1,25 @@
+{% extends "shared/base.html" %}
+
+{% block page_class %}mx-auto max-w-lg px-0 py-0 pb-20{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100dvh-57px)] flex-col">
+  {% if customer %}
+    <div class="flex items-center justify-between border-b border-white/10 bg-garage-950/90 px-4 py-2.5 text-sm backdrop-blur-xl">
+      <span class="text-paper-muted">
+        <i class="fa-solid fa-phone me-1.5 text-xs text-copper-bright"></i>
+        <bdi dir="ltr">{{ customer.phone }}</bdi>
+      </span>
+      <a href="{% url 'home' %}" class="text-xs text-paper-muted no-underline transition hover:text-copper-bright">ورشة</a>
+    </div>
+  {% endif %}
+
+  <div class="flex flex-1 flex-col">
+    {% block customer_content %}{% endblock %}
+  </div>
+
+  {% if nav_active %}
+    {% include "customer/partials/bottom_nav.html" %}
+  {% endif %}
+</div>
+{% endblock %}

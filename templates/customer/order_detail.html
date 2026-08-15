@@ -1,0 +1,137 @@
+{% extends "customer/base.html" %}
+{% load warsha_ui %}
+
+{% block title %}ورشة — طلب #{{ order.pk }}{% endblock %}
+
+{% block customer_content %}
+<div class="flex-1 overflow-y-auto">
+  <div class="sticky top-0 z-10 border-b border-white/10 bg-garage-950/95 px-4 py-3 backdrop-blur-xl">
+    <div class="flex items-center justify-between gap-3">
+      <a href="{% url 'customer-orders-list' %}" class="flex items-center gap-1.5 text-sm text-copper-bright no-underline">
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+        كل طلباتي
+      </a>
+      <a href="{% url 'customer-chat' %}" class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-copper-bright no-underline transition hover:border-copper/40" aria-label="محادثة">
+        <i class="fa-solid fa-comment-dots text-sm"></i>
+      </a>
+    </div>
+    <div class="mt-2 flex flex-wrap items-start justify-between gap-2">
+      <h1 class="text-xl font-extrabold text-paper">طلب <bdi dir="ltr">#{{ order.pk }}</bdi></h1>
+      <div class="flex flex-col items-end gap-1">
+        <span class="text-sm font-bold text-copper-bright">{{ order.status|status_ar }}</span>
+        <span class="status-badge status-{{ order.status }}" lang="en" dir="ltr">{{ order.get_status_display }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-4 p-4">
+    {% if messages %}
+      <ul class="space-y-2">
+        {% for message in messages %}
+          <li class="rounded-xl border px-4 py-3 text-sm {% if message.tags == 'error' %}border-red-500/30 bg-red-500/10 text-red-200{% else %}border-emerald-500/30 bg-emerald-500/10 text-emerald-200{% endif %}">
+            {{ message }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if order.status == 'ready_for_pickup' %}
+      <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <i class="fa-solid fa-car-side me-1.5 text-copper-bright"></i>العربية جاهزة للاستلام — تقدر تيجي الورشة
+      </div>
+    {% endif %}
+
+    {% if payment_return %}
+      <p class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">جاري التحقق من الدفع… حدّث الصفحة بعد لحظات.</p>
+    {% endif %}
+
+    {% if order.status == 'in_progress' or order.status == 'ready_for_pickup' %}
+      <div class="rounded-xl border border-white/10 bg-black/25 p-4">
+        <div class="mb-2 flex justify-between text-sm text-paper-muted">
+          <span>تقدم الشغل</span>
+          <span><bdi dir="ltr">{{ order.progress_percent }}%</bdi></span>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-white/10">
+          <div class="h-full rounded-full bg-gradient-to-r from-copper-dim to-copper-bright transition-all duration-500" style="width: {{ order.progress_percent }}%;"></div>
+        </div>
+        {% if order.status == 'in_progress' and order.remaining_eta_minutes %}
+          <p class="mt-2 text-sm text-paper-muted">
+            الوقت المتبقي التقريبي: <bdi dir="ltr">{{ order.remaining_eta_minutes }}</bdi> دقيقة
+          </p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if show_agreement %}
+      <section class="relative overflow-hidden rounded-2xl border border-copper/30 bg-gradient-to-br from-copper/10 to-black/40 ps-5 before:absolute before:inset-y-0 before:start-0 before:w-1 before:bg-gradient-to-b before:from-copper-bright before:to-copper-dim">
+        <div class="p-5">
+          <p class="m-0 text-sm text-paper-muted">عرض كريم</p>
+          {% if order.diagnostic %}
+            <p class="mt-1 text-lg font-bold" dir="auto">{{ order.diagnostic.name }}</p>
+          {% endif %}
+          <p class="my-3 text-4xl font-black leading-none text-copper-bright">
+            <bdi dir="ltr">{{ order.quoted_price }}</bdi>
+            <small class="text-base font-semibold text-paper-muted"> جنيه</small>
+          </p>
+
+          {% if order.steps.all %}
+            <ul class="step-timeline m-0 list-none p-0">
+              {% for step in order.steps.all %}
+                <li class="relative border-s-2 pb-4 ps-6 last:border-transparent last:pb-0 {% if step.completed_at %}border-emerald-500/40{% else %}border-white/10{% endif %}">
+                  {% if step.completed_at %}
+                    <i class="fa-solid fa-check text-emerald-400" aria-hidden="true"></i>
+                  {% endif %}
+                  <strong dir="auto">{{ step.title }}</strong>
+                  <span class="text-sm text-paper-muted"> ~<bdi dir="ltr">{{ step.expected_minutes }}</bdi> دقيقة</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          {% if order.kareem_note %}
+            <p class="mt-4 border-t border-white/10 pt-4 text-sm"><strong>ملاحظة كريم:</strong> <span dir="auto">{{ order.kareem_note }}</span></p>
+          {% endif %}
+
+          {% if order.status == 'quoted' %}
+            {% if paymob_ready %}
+              <form method="post" action="{% url 'api-checkout' order_id=order.pk %}" class="mt-5">
+                {% csrf_token %}
+                <button type="submit" class="btn-pill btn-pill-primary w-full justify-center">
+                  <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
+                  <span>ادفع <bdi dir="ltr">{{ order.quoted_price }}</bdi> جنيه</span>
+                </button>
+              </form>
+            {% else %}
+              <p class="mt-4 text-sm text-paper-muted">الدفع عبر Paymob — في انتظار مفاتيح الحساب</p>
+            {% endif %}
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section>
+      <h2 class="mb-3 text-lg font-bold text-paper">المحادثة</h2>
+      <div
+        id="message-thread"
+        class="flex flex-col gap-2"
+        {% if poll_thread %}
+          hx-get="{% url 'customer-order-thread' order_id=order.pk %}"
+          hx-trigger="every 8s"
+          hx-swap="innerHTML"
+        {% endif %}
+      >
+        {% include "shared/partials/message_thread.html" %}
+      </div>
+    </section>
+
+    {% if can_cancel %}
+      <form method="post" action="{% url 'customer-order-cancel' order_id=order.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="w-full rounded-xl border border-red-500/40 bg-transparent py-3 font-bold text-red-300 transition hover:bg-red-500/10 active:scale-[0.98]">
+          إلغاء الطلب
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

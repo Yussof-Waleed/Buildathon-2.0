@@ -1,0 +1,63 @@
+{% extends "mechanic/base.html" %}
+
+{% block title %}ورشة — {% if is_edit %}تعديل تشخيص{% else %}تشخيص جديد{% endif %}{% endblock %}
+
+{% block mechanic_content %}
+<section class="page-card animate-fade-up">
+  <h1 class="text-xl font-extrabold text-paper">{% if is_edit %}تعديل تشخيص{% else %}تشخيص جديد{% endif %}</h1>
+  <p class="mt-0.5 text-xs">
+    <a href="{% url 'kareem-diagnostics-list' %}" class="text-copper-bright no-underline">كل التشخيصات</a>
+  </p>
+
+  <form method="post" class="mt-4 space-y-4">
+    {% csrf_token %}
+    <div class="flex flex-col gap-2">
+      <label for="id_name" class="text-xs text-paper-muted">الاسم</label>
+      {{ form.name }}
+      <label for="id_price" class="text-xs text-paper-muted">السعر (جنيه)</label>
+      {{ form.price }}
+    </div>
+
+    <div>
+      <h2 class="mb-2 text-sm font-bold text-paper-muted">الخطوات</h2>
+      {{ formset.management_form }}
+      <div class="space-y-2">
+        {% for step_form in formset %}
+          <div class="rounded-lg border border-white/10 bg-black/20 p-3">
+            {% for hidden in step_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="grid gap-2 sm:grid-cols-2">
+              <div>
+                <label class="text-xs text-paper-muted">العنوان</label>
+                {{ step_form.title }}
+              </div>
+              <div>
+                <label class="text-xs text-paper-muted">الدقائق</label>
+                {{ step_form.expected_minutes }}
+              </div>
+              <div class="sm:col-span-2">
+                <label class="text-xs text-paper-muted">الوصف</label>
+                {{ step_form.description }}
+              </div>
+              <div>
+                <label class="text-xs text-paper-muted">الترتيب</label>
+                {{ step_form.sort_order }}
+              </div>
+              {% if step_form.DELETE %}
+                <div class="flex items-end">
+                  <label class="flex items-center gap-1.5 text-xs text-red-300">
+                    {{ step_form.DELETE }} حذف
+                  </label>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label="حفظ" icon="fa-solid fa-check text-xs" %}
+    </div>
+  </form>
+</section>
+{% endblock %}

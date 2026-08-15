@@ -1,0 +1,69 @@
+{% extends "customer/base.html" %}
+{% load warsha_ui %}
+
+{% block title %}ورشة — طلباتي{% endblock %}
+
+{% block customer_content %}
+<div class="flex-1 p-4">
+  <div class="mb-5">
+    <h1 class="text-2xl font-extrabold text-paper">طلباتي</h1>
+    <p class="mt-1 text-sm text-paper-muted">كل طلباتك في ورشة كريم</p>
+  </div>
+
+  {% if orders %}
+    <ul class="flex flex-col gap-3">
+      {% for order in orders %}
+        <li>
+          <a
+            href="{% url 'customer-order-detail' order_id=order.pk %}"
+            class="block rounded-2xl border border-white/10 bg-black/25 p-4 no-underline transition hover:border-copper/30 hover:bg-black/40"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <strong class="text-paper">طلب <bdi dir="ltr">#{{ order.pk }}</bdi></strong>
+                  <span class="text-sm font-semibold text-copper-bright">{{ order.status|status_ar }}</span>
+                </div>
+                <p class="mt-1 truncate text-sm text-paper-muted" dir="auto">
+                  {% if order.diagnostic %}
+                    {{ order.diagnostic.name }}
+                  {% else %}
+                    قيد المراجعة
+                  {% endif %}
+                </p>
+                {% if order.quoted_price %}
+                  <p class="mt-1 text-lg font-bold text-copper-bright">
+                    <bdi dir="ltr">{{ order.quoted_price }}</bdi> جنيه
+                  </p>
+                {% endif %}
+                {% if order.status == 'in_progress' or order.status == 'ready_for_pickup' %}
+                  <div class="mt-2">
+                    <div class="mb-1 flex justify-between text-xs text-paper-muted">
+                      <span>تقدم الشغل</span>
+                      <span><bdi dir="ltr">{{ order.progress_percent }}%</bdi></span>
+                    </div>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div class="h-full rounded-full bg-gradient-to-r from-copper-dim to-copper-bright" style="width: {{ order.progress_percent }}%;"></div>
+                    </div>
+                  </div>
+                {% endif %}
+                <p class="mt-2 text-xs text-paper-muted"><bdi dir="ltr">{{ order.created_at|date:"d/m H:i" }}</bdi></p>
+              </div>
+              <span class="shrink-0 pt-1 text-paper-muted">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+              </span>
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="rounded-2xl border border-dashed border-white/15 bg-black/20 px-6 py-10 text-center">
+      <p class="text-paper-muted">لا طلبات بعد</p>
+      <a href="{% url 'customer-chat' %}" class="mt-4 inline-block rounded-xl bg-gradient-to-r from-copper-bright to-copper-dim px-6 py-3 font-bold text-garage-950 no-underline shadow-glow transition hover:shadow-glow-lg">
+        ابدأ محادثة
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,29 +1,35 @@
 """
 URL configuration for buildathon2 project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
+
+from jobs.views import home
+from payments import views as payment_views
+from payments.paymob_config import get_paymob_readiness
 
 
 def health(_request):
-    return JsonResponse({'status': 'ok'})
+    paymob = get_paymob_readiness()
+    return JsonResponse({
+        'status': 'ok',
+        'product': 'warsha',
+        'paymob': paymob,
+    })
 
 
 urlpatterns = [
-    path('', health, name='health'),
+    path('', home, name='home'),
+    path('', include('jobs.urls')),
+    path('k/', include('jobs.kareem_urls')),
+    path('api/', include('payments.urls')),
+    path('webhooks/paymob/', payment_views.paymob_webhook, name='paymob-webhook'),
+    path('health/', health, name='health'),
     path('admin/', admin.site.urls),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

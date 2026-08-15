@@ -4,6 +4,8 @@ Hackathon project built for **Buildathon 2.0**, organized by [Cursor Egypt](http
 
 **Product & engineering contract:** see [AGENTS.md](AGENTS.md) — Warsha (ورشة), the neighbourhood garage OS.
 
+**Build tracker:** see [TODO.md](TODO.md) — what's done, in scope, and deferred.
+
 This repo is a Django + Django REST Framework backend, starting from a fresh project scaffold.
 
 ## Stack

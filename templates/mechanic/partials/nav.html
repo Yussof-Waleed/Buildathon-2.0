@@ -1,0 +1,26 @@
+<nav class="mb-4 flex items-center gap-1 overflow-x-auto border-b border-white/10 pb-2">
+  <a href="{% url 'kareem-overview' %}"
+     class="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs no-underline transition {% if nav_active == 'overview' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-chart-line text-[0.65rem]" aria-hidden="true"></i> نظرة عامة
+  </a>
+  <a href="{% url 'kareem-requests-list' %}"
+     class="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs no-underline transition {% if nav_active == 'requests' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-inbox text-[0.65rem]" aria-hidden="true"></i> الطلبات
+  </a>
+  <a href="{% url 'kareem-money' %}"
+     class="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs no-underline transition {% if nav_active == 'money' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-coins text-[0.65rem]" aria-hidden="true"></i> المدفوعات
+  </a>
+  <a href="{% url 'kareem-diagnostics-list' %}"
+     class="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs no-underline transition {% if nav_active == 'diagnostics' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-screwdriver-wrench text-[0.65rem]" aria-hidden="true"></i> التشخيصات
+  </a>
+  <a href="{% url 'kareem-labels-list' %}"
+     class="flex shrink-0 items-center gap-1 rounded-md px-2.5 py-1.5 text-xs no-underline transition {% if nav_active == 'labels' %}bg-copper/20 text-copper-bright{% else %}text-paper-muted hover:bg-white/5 hover:text-paper{% endif %}">
+    <i class="fa-solid fa-tags text-[0.65rem]" aria-hidden="true"></i> الوسوم
+  </a>
+  <a href="{% url 'kareem-logout' %}"
+     class="ms-auto flex shrink-0 items-center gap-1 rounded-md border border-dashed border-white/15 px-2.5 py-1.5 text-xs text-paper-muted no-underline transition hover:border-copper/40 hover:text-paper">
+    <i class="fa-solid fa-right-from-bracket text-[0.65rem]" aria-hidden="true"></i> خروج
+  </a>
+</nav>

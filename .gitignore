@@ -2,6 +2,8 @@
 __pycache__/
 .DS_Store
 staticfiles/
+media/
+db.sqlite3
 .idea/
 .env
 .env.local

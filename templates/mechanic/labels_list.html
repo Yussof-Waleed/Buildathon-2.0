@@ -1,0 +1,46 @@
+{% extends "mechanic/base.html" %}
+
+{% block title %}ورشة — الوسوم{% endblock %}
+
+{% block mechanic_content %}
+<section class="page-card animate-fade-up">
+  <div>
+    <h1 class="text-xl font-extrabold text-paper">الوسوم</h1>
+    <p class="mt-0.5 text-xs text-paper-muted">تصنيف الطلبات</p>
+  </div>
+
+  <form method="post" class="mt-3 flex flex-wrap items-end gap-2">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="create">
+    <div class="min-w-[160px] flex-1">
+      <label for="id_name" class="text-xs text-paper-muted">وسم جديد</label>
+      {{ form.name }}
+    </div>
+    {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label="إضافة" icon="fa-solid fa-plus text-xs" %}
+  </form>
+
+  {% if labels %}
+    <ul class="mt-3 space-y-1.5">
+      {% for label in labels %}
+        <li class="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+          <form method="post" action="{% url 'kareem-label-edit' label_id=label.pk %}" class="flex min-w-0 flex-1 items-center gap-2">
+            {% csrf_token %}
+            <input type="text" name="name" value="{{ label.name }}" dir="auto" required
+              class="min-w-0 flex-1 rounded-md border border-white/10 bg-black/30 px-2 py-1.5 text-sm text-paper focus:border-copper-bright focus:outline-none">
+            <button type="submit" class="btn-pill btn-pill-ghost !px-2.5 !py-1 text-xs">حفظ</button>
+          </form>
+          <span class="text-xs text-paper-muted">{{ label.order_count }}</span>
+          {% if label.order_count == 0 %}
+            <form method="post" action="{% url 'kareem-label-delete' label_id=label.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="cursor-pointer border-0 bg-transparent text-xs text-red-300">حذف</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="mt-3 text-sm text-paper-muted">لا توجد وسوم.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% if tag == 'a' %}
+<a
+  href="{{ href }}"
+  class="btn-pill btn-pill-{{ variant|default:'ghost' }} {{ extra_class }}"
+>
+  {% if icon %}<i class="{{ icon }}" aria-hidden="true"></i>{% endif %}
+  <span>{{ label }}</span>
+</a>
+{% else %}
+<button
+  type="{{ type|default:'button' }}"
+  class="btn-pill btn-pill-{{ variant|default:'ghost' }} {{ extra_class }}"
+  {% if id %}id="{{ id }}"{% endif %}
+  {% if disabled %}disabled{% endif %}
+>
+  {% if icon %}<i class="{{ icon }}" aria-hidden="true"></i>{% endif %}
+  <span>{{ label }}</span>
+</button>
+{% endif %}

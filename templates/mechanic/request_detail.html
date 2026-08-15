@@ -1,0 +1,151 @@
+{% extends "mechanic/base.html" %}
+{% load warsha_ui %}
+
+{% block title %}ورشة — طلب #{{ order.pk }}{% endblock %}
+
+{% block mechanic_content %}
+<section class="page-card animate-fade-up pb-2">
+  <div class="flex flex-wrap items-start justify-between gap-2">
+    <div>
+      <h1 class="text-xl font-extrabold text-paper">طلب <bdi dir="ltr">#{{ order.pk }}</bdi></h1>
+      <p class="mt-1 text-xs text-paper-muted">
+        <a href="{% url 'kareem-requests-list' %}" class="text-copper-bright no-underline">كل الطلبات</a>
+        · <bdi dir="ltr">{{ order.customer.phone }}</bdi>
+      </p>
+    </div>
+    <span class="text-xs font-semibold text-copper-bright">{{ order.status|status_ar }}</span>
+  </div>
+
+  {% if order.labels.all %}
+    <div class="mt-2 flex flex-wrap gap-1.5">
+      {% for label in order.labels.all %}
+        <span class="rounded-full border border-copper/30 bg-copper/10 px-2 py-0.5 text-xs text-copper-bright" dir="auto">{{ label.name }}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="mt-4">
+    <h2 class="mb-2 text-sm font-bold text-paper-muted">المحادثة</h2>
+    <div
+      id="message-thread"
+      class="flex flex-col gap-2"
+      {% if poll_thread %}
+        hx-get="{% url 'kareem-request-thread' order_id=order.pk %}"
+        hx-trigger="every 8s"
+        hx-swap="innerHTML"
+      {% endif %}
+    >
+      {% include "shared/partials/message_thread.html" %}
+    </div>
+  </section>
+
+  {% if can_complete_steps and order.steps.all %}
+    <section class="mt-4">
+      <h2 class="mb-2 text-sm font-bold text-paper-muted">خطوات الشغل</h2>
+      <ul class="flex flex-col gap-1.5">
+        {% for step in order.steps.all %}
+          <li class="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm">
+            <div class="min-w-0 flex-1">
+              {% if step.completed_at %}
+                <i class="fa-solid fa-check text-xs text-emerald-400" aria-hidden="true"></i>
+              {% endif %}
+              <span dir="auto">{{ step.title }}</span>
+              <span class="text-xs text-paper-muted">~<bdi dir="ltr">{{ step.expected_minutes }}</bdi>د</span>
+            </div>
+            {% if not step.completed_at %}
+              <form method="post" action="{% url 'kareem-complete-step' order_id=order.pk step_id=step.pk %}">
+                {% csrf_token %}
+                {% include "shared/partials/btn_icon.html" with type="submit" icon="fa-solid fa-check" aria_label="إتمام" extra_class="btn-icon-sm" %}
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {% if order.quoted_price %}
+    <section class="mt-4 rounded-xl border border-copper/25 bg-copper/5 p-3 text-sm">
+      {% if order.diagnostic %}
+        <p class="m-0 font-bold" dir="auto">{{ order.diagnostic.name }}</p>
+      {% endif %}
+      <p class="m-0 mt-1 text-lg font-black text-copper-bright">
+        <bdi dir="ltr">{{ order.quoted_price }}</bdi> <span class="text-xs font-normal text-paper-muted">جنيه</span>
+      </p>
+      {% if order.kareem_note %}
+        <p class="mt-2 text-xs text-paper-muted" dir="auto">{{ order.kareem_note }}</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if can_quote %}
+    <details id="quote-details" class="mt-4 rounded-xl border border-white/10 bg-black/20">
+      <summary class="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-copper-bright marker:content-none">
+        <i class="fa-solid fa-chevron-down me-1 text-xs transition group-open:rotate-180"></i>
+        نموذج عرض السعر
+      </summary>
+      <form method="post" action="{% url 'kareem-request-quote' order_id=order.pk %}" class="flex flex-col gap-2 border-t border-white/10 p-3">
+        {% csrf_token %}
+        <label for="diagnostic_id" class="text-xs text-paper-muted">التشخيص</label>
+        <select id="diagnostic_id" name="diagnostic_id" required class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none">
+          <option value="">— اختر —</option>
+          {% for diagnostic in diagnostics %}
+            <option value="{{ diagnostic.pk }}">&#x2066;{{ diagnostic.name }}&#x2069; — {{ diagnostic.price }} جنيه</option>
+          {% endfor %}
+        </select>
+        <label for="kareem_note" class="text-xs text-paper-muted">ملاحظة (اختياري)</label>
+        <textarea id="kareem_note" name="kareem_note" rows="2" dir="auto" placeholder="مثال: هنبدأ بكرة الصبح" class="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none"></textarea>
+        <div class="flex justify-end">
+          {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label="إرسال العرض" icon="fa-solid fa-paper-plane text-xs" %}
+        </div>
+      </form>
+    </details>
+  {% endif %}
+
+  {% if can_quote or can_confirm_paid or can_mark_ready or can_mark_completed %}
+    <div class="toolbar-sticky">
+      <div class="toolbar-sticky-inner flex gap-2 overflow-x-auto">
+        {% if can_quote %}
+          <button type="button" id="open-quote-btn" class="btn-pill btn-pill-primary">
+            <i class="fa-solid fa-tag text-xs" aria-hidden="true"></i>
+            <span>عرض سعر</span>
+          </button>
+        {% endif %}
+        {% if can_confirm_paid %}
+          <form method="post" action="{% url 'kareem-confirm-paid' order_id=order.pk %}" class="inline">
+            {% csrf_token %}
+            {% include "shared/partials/btn_pill.html" with variant="dev" type="submit" label="تأكيد دفع" icon="fa-solid fa-receipt text-xs" %}
+          </form>
+        {% endif %}
+        {% if can_mark_ready %}
+          <form method="post" action="{% url 'kareem-mark-ready' order_id=order.pk %}" class="inline">
+            {% csrf_token %}
+            {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label="جاهز للاستلام" icon="fa-solid fa-car text-xs" %}
+          </form>
+        {% endif %}
+        {% if can_mark_completed %}
+          <form method="post" action="{% url 'kareem-mark-completed' order_id=order.pk %}" class="inline">
+            {% csrf_token %}
+            {% include "shared/partials/btn_pill.html" with variant="success" type="submit" label="تم الاستلام" icon="fa-solid fa-circle-check text-xs" %}
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+{% if can_quote %}
+<script>
+  (function () {
+    const btn = document.getElementById('open-quote-btn');
+    const details = document.getElementById('quote-details');
+    if (btn && details) {
+      btn.addEventListener('click', () => {
+        details.open = true;
+        details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+  })();
+</script>
+{% endif %}
+{% endblock %}
