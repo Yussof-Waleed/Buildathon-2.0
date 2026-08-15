@@ -40,8 +40,15 @@ def validate_audio_upload(audio_file) -> None:
         raise ValidationError('نوع الملف غير مدعوم — استخدم تسجيل صوتي.')
 
 
+def _get_conversation(order: Order) -> Conversation | None:
+    try:
+        return order.conversation
+    except Conversation.DoesNotExist:
+        return None
+
+
 def _ensure_conversation(order: Order) -> Conversation:
-    conversation = order.conversations.first()
+    conversation = _get_conversation(order)
     if conversation:
         return conversation
     return Conversation.objects.create(
@@ -54,16 +61,27 @@ def create_order_from_intake(
     customer: Customer,
     body: str,
     audio=None,
+    conversation: Conversation | None = None,
 ) -> Order:
-    """Dumb intake: every message creates a new pending_review order."""
+    """Dumb intake: bind the current conversation to a new pending_review order."""
+    if conversation is None:
+        conversation = get_or_create_current_conversation(customer)
+    if conversation.order_id:
+        Message.objects.create(
+            conversation=conversation,
+            author_type=Message.AuthorType.CUSTOMER,
+            body=body.strip(),
+            audio=audio,
+            channel=Message.Channel.WEB,
+        )
+        return conversation.order
+
     order = Order.objects.create(
         customer=customer,
         status=Order.Status.PENDING_REVIEW,
     )
-    conversation = Conversation.objects.create(
-        customer=customer,
-        order=order,
-    )
+    conversation.order = order
+    conversation.save(update_fields=['order'])
     Message.objects.create(
         conversation=conversation,
         author_type=Message.AuthorType.CUSTOMER,
@@ -81,6 +99,8 @@ def snapshot_diagnostic_on_order(
 ) -> Order:
     """Copy diagnostic price and steps onto order; set status to quoted."""
     order.diagnostic = diagnostic
+    order.quoted_title_ar = diagnostic.title_ar
+    order.quoted_title_en = diagnostic.title_en
     order.quoted_price = diagnostic.price
     order.kareem_note = kareem_note
     order.status = Order.Status.QUOTED
@@ -90,37 +110,37 @@ def snapshot_diagnostic_on_order(
     OrderStep.objects.bulk_create([
         OrderStep(
             order=order,
-            title=step.title,
-            description=step.description,
+            title_ar=step.title_ar,
+            title_en=step.title_en,
+            description_ar=step.description_ar,
+            description_en=step.description_en,
             expected_minutes=step.expected_minutes,
             sort_order=step.sort_order,
         )
         for step in diagnostic.steps.all()
     ])
 
-    conversation = order.conversations.first()
-    if not conversation:
-        conversation = Conversation.objects.create(
-            customer=order.customer,
-            order=order,
-        )
+    conversation = _ensure_conversation(order)
 
-    steps_text = '\n'.join(
-        f'- {s.title} (~{s.expected_minutes} min)'
-        for s in order.steps.all()
-    )
-    body = (
-        f'Diagnostic: {diagnostic.name}\n'
-        f'Price: {order.quoted_price} EGP\n'
-        f'Steps:\n{steps_text}'
-    )
+    steps_lines = [
+        f'{step.title_en}|{step.expected_minutes}'
+        for step in order.steps.all()
+    ]
+    quote_lines = [
+        '__quote__',
+        diagnostic.title_en,
+        str(order.quoted_price),
+        *steps_lines,
+    ]
     if kareem_note:
-        body += f'\n\nNote from Kareem: {kareem_note}'
+        quote_lines.append(kareem_note)
+    body = '\n'.join(quote_lines)
 
     Message.objects.create(
         conversation=conversation,
-        author_type=Message.AuthorType.SYSTEM,
+        author_type=Message.AuthorType.MECHANIC,
         body=body,
+        channel=Message.Channel.WEB,
     )
 
     return order
@@ -142,8 +162,8 @@ def complete_order_step(order: Order, step_id: int) -> Order:
     conversation = _ensure_conversation(order)
     Message.objects.create(
         conversation=conversation,
-        author_type=Message.AuthorType.SYSTEM,
-        body=f'تم إنجاز: {step.title}',
+        author_type=Message.AuthorType.MECHANIC,
+        body=f'__step__\n{step.title_en}',
         channel=Message.Channel.WEB,
     )
 
@@ -152,8 +172,8 @@ def complete_order_step(order: Order, step_id: int) -> Order:
         order.save(update_fields=['status', 'updated_at'])
         Message.objects.create(
             conversation=conversation,
-            author_type=Message.AuthorType.SYSTEM,
-            body='العربية جاهزة للاستلام — تقدر تيجي الورشة.',
+            author_type=Message.AuthorType.MECHANIC,
+            body='__ready__\nالعربية جاهزة للاستلام — تقدر تيجي الورشة.',
             channel=Message.Channel.WEB,
         )
 
@@ -174,8 +194,8 @@ def mark_ready_for_pickup(order: Order) -> Order:
 
     Message.objects.create(
         conversation=conversation,
-        author_type=Message.AuthorType.SYSTEM,
-        body='العربية جاهزة للاستلام — تقدر تيجي الورشة.',
+        author_type=Message.AuthorType.MECHANIC,
+        body='__ready__\nالعربية جاهزة للاستلام — تقدر تيجي الورشة.',
         channel=Message.Channel.WEB,
     )
 
@@ -193,7 +213,7 @@ def mark_order_completed(order: Order) -> Order:
     conversation = _ensure_conversation(order)
     Message.objects.create(
         conversation=conversation,
-        author_type=Message.AuthorType.SYSTEM,
+        author_type=Message.AuthorType.MECHANIC,
         body='تم استلام العربية — شكراً لثقتك في ورشة كريم.',
         channel=Message.Channel.WEB,
     )
@@ -209,14 +229,30 @@ def egp_from_piasters(piasters: int) -> Decimal:
     return Decimal(piasters) / 100
 
 
-def get_or_create_intake_conversation(customer: Customer) -> Conversation:
-    conversation = Conversation.objects.filter(
+def get_or_create_current_conversation(customer: Customer) -> Conversation:
+    """Open order chat if any; else unbound intake; never mint a ghost inbox while a job is open."""
+    open_conversation = (
+        Conversation.objects.filter(
+            customer=customer,
+            order__status__in=OPEN_ORDER_STATUSES,
+        )
+        .order_by('-created_at')
+        .first()
+    )
+    if open_conversation:
+        return open_conversation
+
+    unbound = Conversation.objects.filter(
         customer=customer,
         order__isnull=True,
-    ).first()
-    if conversation:
-        return conversation
+    ).order_by('-created_at').first()
+    if unbound:
+        return unbound
     return Conversation.objects.create(customer=customer, order=None)
+
+
+def get_or_create_intake_conversation(customer: Customer) -> Conversation:
+    return get_or_create_current_conversation(customer)
 
 
 def _open_orders_queryset(customer: Customer):
@@ -227,7 +263,7 @@ def _open_orders_queryset(customer: Customer):
 
 
 def _order_summary(order: Order) -> str:
-    conversation = order.conversations.first()
+    conversation = _get_conversation(order)
     if conversation:
         first = conversation.messages.filter(
             author_type=Message.AuthorType.CUSTOMER,
@@ -254,15 +290,61 @@ def _intake_order_link_body(order_id: int, prefix: str) -> str:
     return f'[order:{order_id}] {prefix}'
 
 
-def _copy_customer_message_to_order(
-    order: Order,
-    body: str,
-    audio=None,
-) -> Message:
+def _bind_conversation_to_new_order(
+    conversation: Conversation,
+    customer: Customer,
+    labeler_text: str,
+) -> Order:
+    from ai.tagger import suggest_labels_from_db
+
+    order = Order.objects.create(
+        customer=customer,
+        status=Order.Status.PENDING_REVIEW,
+    )
+    conversation.order = order
+    conversation.save(update_fields=['order'])
+    label_ids = suggest_labels_from_db(labeler_text)
+    if label_ids:
+        order.labels.set(label_ids)
+    return order
+
+
+def _fork_conversation_for_new_order(
+    parent: Conversation,
+    triggering_message: Message,
+    customer: Customer,
+    labeler_text: str,
+) -> Order:
+    from ai.tagger import suggest_labels_from_db
+
+    order = Order.objects.create(
+        customer=customer,
+        status=Order.Status.PENDING_REVIEW,
+    )
+    child = Conversation.objects.create(
+        customer=customer,
+        order=order,
+        parent=parent,
+    )
+    triggering_message.conversation = child
+    triggering_message.save(update_fields=['conversation'])
+    Message.objects.create(
+        conversation=parent,
+        author_type=Message.AuthorType.MECHANIC,
+        body=_intake_order_link_body(order.pk, 'تم فتح طلب جديد من المحادثة دي'),
+        channel=Message.Channel.WEB,
+    )
+    label_ids = suggest_labels_from_db(labeler_text)
+    if label_ids:
+        order.labels.set(label_ids)
+    return order
+
+
+def post_mechanic_message(order: Order, body: str, audio=None) -> Message:
     conversation = _ensure_conversation(order)
     return Message.objects.create(
         conversation=conversation,
-        author_type=Message.AuthorType.CUSTOMER,
+        author_type=Message.AuthorType.MECHANIC,
         body=body.strip(),
         audio=audio,
         channel=Message.Channel.WEB,
@@ -273,26 +355,30 @@ def process_chat_message(
     customer: Customer,
     body: str,
     audio=None,
+    conversation: Conversation | None = None,
 ) -> ProcessChatResult:
     """
-    Route intake via Labeler when LLM configured; else dumb new order + redirect.
-    Always records customer message on intake conversation when using AI path.
+    Save on the current conversation, then Labeler binds, stays, or forks.
+    Dumb fallback binds in place (or appends if already bound). Never copies.
     """
     from ai.labeler import AUDIO_PLACEHOLDER, classify_message
     from ai.llm import is_llm_configured
-    from ai.tagger import suggest_labels_from_db
+
+    if conversation is None:
+        conversation = get_or_create_current_conversation(customer)
 
     if not is_llm_configured():
-        order = create_order_from_intake(customer, body, audio=audio)
+        order = create_order_from_intake(
+            customer, body, audio=audio, conversation=conversation,
+        )
         return ProcessChatResult(
             route='dumb_fallback',
             order_id=order.pk,
             redirect=True,
         )
 
-    intake = get_or_create_intake_conversation(customer)
-    Message.objects.create(
-        conversation=intake,
+    customer_message = Message.objects.create(
+        conversation=conversation,
         author_type=Message.AuthorType.CUSTOMER,
         body=body.strip(),
         audio=audio,
@@ -303,47 +389,55 @@ def process_chat_message(
     open_orders = _open_orders_for_labeler(customer)
 
     try:
-        result = classify_message(customer, labeler_text, open_orders)
+        result = classify_message(
+            customer,
+            labeler_text,
+            open_orders,
+            current_order_id=conversation.order_id,
+        )
     except Exception:
         result = None
 
+    bound = conversation.order_id is not None
+
+    if bound:
+        if result is not None and result.route == 'new_request':
+            order = _fork_conversation_for_new_order(
+                conversation, customer_message, customer, labeler_text,
+            )
+            return ProcessChatResult(
+                route='new_request',
+                order_id=order.pk,
+                redirect=True,
+            )
+        return ProcessChatResult(
+            route='existing_order',
+            order_id=conversation.order_id,
+        )
+
     if result is None or result.route == 'new_request':
-        order = Order.objects.create(
-            customer=customer,
-            status=Order.Status.PENDING_REVIEW,
+        order = _bind_conversation_to_new_order(conversation, customer, labeler_text)
+        return ProcessChatResult(
+            route='new_request',
+            order_id=order.pk,
+            redirect=True,
         )
-        _copy_customer_message_to_order(order, body, audio=audio)
-        label_ids = suggest_labels_from_db(labeler_text)
-        if label_ids:
-            order.labels.set(label_ids)
-        Message.objects.create(
-            conversation=intake,
-            author_type=Message.AuthorType.SYSTEM,
-            body=_intake_order_link_body(
-                order.pk,
-                'تم إنشاء طلبك — تابع من هنا',
-            ),
-            channel=Message.Channel.WEB,
-        )
-        return ProcessChatResult(route='new_request', order_id=order.pk)
 
     if result.route == 'existing_order' and result.order_id:
         order = Order.objects.get(pk=result.order_id, customer=customer)
-        _copy_customer_message_to_order(order, body, audio=audio)
-        Message.objects.create(
-            conversation=intake,
-            author_type=Message.AuthorType.SYSTEM,
-            body=_intake_order_link_body(
-                order.pk,
-                'تم إضافة رسالتك على الطلب',
-            ),
-            channel=Message.Channel.WEB,
+        dest = _ensure_conversation(order)
+        if dest.pk != conversation.pk:
+            customer_message.conversation = dest
+            customer_message.save(update_fields=['conversation'])
+        return ProcessChatResult(
+            route='existing_order',
+            order_id=order.pk,
+            redirect=True,
         )
-        return ProcessChatResult(route='existing_order', order_id=order.pk)
 
     reply = result.reply or 'أهلاً! احكيلنا عن مشكلة العربية لو محتاج صيانة.'
     Message.objects.create(
-        conversation=intake,
+        conversation=conversation,
         author_type=Message.AuthorType.MECHANIC,
         body=reply,
         channel=Message.Channel.WEB,

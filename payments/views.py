@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.utils.translation import gettext as _
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -25,7 +26,7 @@ def checkout(request, order_id):
     order = get_object_or_404(Order, pk=order_id, customer=customer)
 
     if order.status != Order.Status.QUOTED or order.quoted_price is None:
-        messages.error(request, 'لا يمكن الدفع لهذا الطلب.')
+        messages.error(request, _('This order cannot be paid.'))
         return redirect('customer-order-detail', order_id=order.pk)
 
     try:
@@ -34,7 +35,7 @@ def checkout(request, order_id):
         messages.error(request, str(exc))
         return redirect('customer-order-detail', order_id=order.pk)
     except PaymobAPIError as exc:
-        messages.error(request, f'خطأ Paymob: {exc}')
+        messages.error(request, _('Paymob error: %(detail)s') % {'detail': exc})
         return redirect('customer-order-detail', order_id=order.pk)
 
     amount_piasters = int(order.quoted_price * 100)

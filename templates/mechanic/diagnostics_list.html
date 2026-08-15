@@ -29,7 +29,7 @@
         <tbody>
           {% for diagnostic in diagnostics %}
             <tr class="border-b border-white/10 hover:bg-copper/5">
-              <td class="px-2 py-2" dir="auto">{{ diagnostic.name }}</td>
+              <td class="px-2 py-2">{{ diagnostic.localized_title }}</td>
               <td class="px-2 py-2 text-xs"><bdi dir="ltr">{{ diagnostic.price }}</bdi> ج</td>
               <td class="px-2 py-2 text-xs">{{ diagnostic.step_count }}</td>
               <td class="px-2 py-2 text-xs">{{ diagnostic.order_count }}</td>
@@ -52,7 +52,7 @@
       {% for diagnostic in diagnostics %}
         <li class="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm">
           <div>
-            <p class="m-0 font-bold" dir="auto">{{ diagnostic.name }}</p>
+            <p class="m-0 font-bold">{{ diagnostic.localized_title }}</p>
             <p class="m-0 text-xs text-paper-muted"><bdi dir="ltr">{{ diagnostic.price }}</bdi> ج · {{ diagnostic.step_count }} خطوات</p>
           </div>
           <a href="{% url 'kareem-diagnostic-edit' diagnostic_id=diagnostic.pk %}" class="text-xs text-copper-bright no-underline">تعديل</a>

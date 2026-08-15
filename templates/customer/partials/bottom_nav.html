@@ -1,5 +1,5 @@
-<nav class="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-garage-950/95 backdrop-blur-xl">
-  <div class="mx-auto flex max-w-lg">
+<nav class="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-garage-950/95 backdrop-blur-xl">
+  <div class="flex w-full">
     <a href="{% url 'customer-chat' %}"
        class="flex flex-1 flex-col items-center gap-1 py-3 text-xs no-underline transition {% if nav_active == 'chat' %}text-copper-bright{% else %}text-paper-muted hover:text-paper{% endif %}">
       <span class="flex h-8 w-8 items-center justify-center rounded-xl {% if nav_active == 'chat' %}bg-copper/20{% endif %}">

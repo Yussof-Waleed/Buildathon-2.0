@@ -1,0 +1,201 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-15 17:29+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: jobs/models.py:11 templates/customer/orders_list.html:33
+msgid "Pending review"
+msgstr ""
+
+#: jobs/models.py:12
+msgid "Quoted"
+msgstr ""
+
+#: jobs/models.py:13
+msgid "In progress"
+msgstr ""
+
+#: jobs/models.py:14
+msgid "Ready for pickup"
+msgstr ""
+
+#: jobs/models.py:15
+msgid "Completed"
+msgstr ""
+
+#: jobs/models.py:16
+msgid "Cancelled"
+msgstr ""
+
+#: jobs/models.py:136 jobs/templatetags/warsha_ui.py:144
+msgid "Customer"
+msgstr ""
+
+#: jobs/models.py:137
+msgid "Mechanic"
+msgstr ""
+
+#: jobs/models.py:138
+msgid "System"
+msgstr ""
+
+#: jobs/models.py:141
+msgid "Web"
+msgstr ""
+
+#: jobs/models.py:142
+msgid "WhatsApp"
+msgstr ""
+
+#: jobs/templatetags/warsha_ui.py:144
+msgid "You"
+msgstr ""
+
+#: jobs/templatetags/warsha_ui.py:146
+msgid "Kareem"
+msgstr ""
+
+#: payments/models.py:9
+msgid "Pending"
+msgstr ""
+
+#: payments/models.py:10
+msgid "Paid"
+msgstr ""
+
+#: payments/models.py:11
+msgid "Failed"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:4
+#: templates/mechanic/labels_list.html:4
+msgid "Warsha"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:4
+#: templates/mechanic/diagnostic_form.html:8
+msgid "Edit diagnostic"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:4
+#: templates/mechanic/diagnostic_form.html:8
+msgid "New diagnostic"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:10
+msgid "All diagnostics"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:17
+#: templates/mechanic/diagnostic_form.html:39
+#: templates/mechanic/labels_list.html:17
+msgid "Arabic title"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:21
+#: templates/mechanic/diagnostic_form.html:43
+#: templates/mechanic/labels_list.html:21
+msgid "English title"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:25
+msgid "Price (EGP)"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:31
+msgid "Steps"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:47
+msgid "Minutes"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:51
+msgid "Sort order"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:55
+msgid "Arabic description"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:59
+msgid "English description"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:65
+#: templates/mechanic/labels_list.html:43
+msgid "Delete"
+msgstr ""
+
+#: templates/mechanic/diagnostic_form.html:76
+#: templates/mechanic/labels_list.html:37
+msgid "Save"
+msgstr ""
+
+#: templates/mechanic/labels_list.html:4 templates/mechanic/labels_list.html:9
+msgid "Labels"
+msgstr ""
+
+#: templates/mechanic/labels_list.html:10
+msgid "Classify orders"
+msgstr ""
+
+#: templates/mechanic/labels_list.html:24
+msgid "Add"
+msgstr ""
+
+#: templates/mechanic/labels_list.html:50
+msgid "No labels yet."
+msgstr ""
+
+#: templates/mechanic/request_detail.html:93
+#: templates/shared/partials/message_bubble.html:29
+#: templates/shared/partials/message_bubble.html:49
+msgid "EGP"
+msgstr ""
+
+#: templates/shared/partials/locale_toggle.html:2
+msgid "Language"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:25
+msgid "Price quote"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:36
+msgid "min"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:42
+msgid "Kareem's note:"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:49
+msgid "Pay"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:53
+msgid "Paymob checkout — waiting for account keys"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:59
+msgid "Completed:"
+msgstr ""
+
+#: templates/shared/partials/message_bubble.html:74
+msgid "Open order"
+msgstr ""

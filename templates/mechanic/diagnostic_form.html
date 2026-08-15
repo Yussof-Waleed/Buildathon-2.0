@@ -1,25 +1,34 @@
 {% extends "mechanic/base.html" %}
+{% load i18n %}
 
-{% block title %}ورشة — {% if is_edit %}تعديل تشخيص{% else %}تشخيص جديد{% endif %}{% endblock %}
+{% block title %}{% trans "Warsha" %} — {% if is_edit %}{% trans "Edit diagnostic" %}{% else %}{% trans "New diagnostic" %}{% endif %}{% endblock %}
 
 {% block mechanic_content %}
 <section class="page-card animate-fade-up">
-  <h1 class="text-xl font-extrabold text-paper">{% if is_edit %}تعديل تشخيص{% else %}تشخيص جديد{% endif %}</h1>
+  <h1 class="text-xl font-extrabold text-paper">{% if is_edit %}{% trans "Edit diagnostic" %}{% else %}{% trans "New diagnostic" %}{% endif %}</h1>
   <p class="mt-0.5 text-xs">
-    <a href="{% url 'kareem-diagnostics-list' %}" class="text-copper-bright no-underline">كل التشخيصات</a>
+    <a href="{% url 'kareem-diagnostics-list' %}" class="text-copper-bright no-underline">{% trans "All diagnostics" %}</a>
   </p>
 
   <form method="post" class="mt-4 space-y-4">
     {% csrf_token %}
-    <div class="flex flex-col gap-2">
-      <label for="id_name" class="text-xs text-paper-muted">الاسم</label>
-      {{ form.name }}
-      <label for="id_price" class="text-xs text-paper-muted">السعر (جنيه)</label>
-      {{ form.price }}
+    <div class="grid gap-2 sm:grid-cols-2">
+      <div>
+        <label for="id_title_ar" class="text-xs text-paper-muted">{% trans "Arabic title" %}</label>
+        {{ form.title_ar }}
+      </div>
+      <div>
+        <label for="id_title_en" class="text-xs text-paper-muted">{% trans "English title" %}</label>
+        {{ form.title_en }}
+      </div>
+      <div class="sm:col-span-2">
+        <label for="id_price" class="text-xs text-paper-muted">{% trans "Price (EGP)" %}</label>
+        {{ form.price }}
+      </div>
     </div>
 
     <div>
-      <h2 class="mb-2 text-sm font-bold text-paper-muted">الخطوات</h2>
+      <h2 class="mb-2 text-sm font-bold text-paper-muted">{% trans "Steps" %}</h2>
       {{ formset.management_form }}
       <div class="space-y-2">
         {% for step_form in formset %}
@@ -27,25 +36,33 @@
             {% for hidden in step_form.hidden_fields %}{{ hidden }}{% endfor %}
             <div class="grid gap-2 sm:grid-cols-2">
               <div>
-                <label class="text-xs text-paper-muted">العنوان</label>
-                {{ step_form.title }}
+                <label class="text-xs text-paper-muted">{% trans "Arabic title" %}</label>
+                {{ step_form.title_ar }}
               </div>
               <div>
-                <label class="text-xs text-paper-muted">الدقائق</label>
+                <label class="text-xs text-paper-muted">{% trans "English title" %}</label>
+                {{ step_form.title_en }}
+              </div>
+              <div>
+                <label class="text-xs text-paper-muted">{% trans "Minutes" %}</label>
                 {{ step_form.expected_minutes }}
               </div>
-              <div class="sm:col-span-2">
-                <label class="text-xs text-paper-muted">الوصف</label>
-                {{ step_form.description }}
-              </div>
               <div>
-                <label class="text-xs text-paper-muted">الترتيب</label>
+                <label class="text-xs text-paper-muted">{% trans "Sort order" %}</label>
                 {{ step_form.sort_order }}
+              </div>
+              <div class="sm:col-span-2">
+                <label class="text-xs text-paper-muted">{% trans "Arabic description" %}</label>
+                {{ step_form.description_ar }}
+              </div>
+              <div class="sm:col-span-2">
+                <label class="text-xs text-paper-muted">{% trans "English description" %}</label>
+                {{ step_form.description_en }}
               </div>
               {% if step_form.DELETE %}
                 <div class="flex items-end">
                   <label class="flex items-center gap-1.5 text-xs text-red-300">
-                    {{ step_form.DELETE }} حذف
+                    {{ step_form.DELETE }} {% trans "Delete" %}
                   </label>
                 </div>
               {% endif %}
@@ -56,7 +73,8 @@
     </div>
 
     <div class="flex justify-end">
-      {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label="حفظ" icon="fa-solid fa-check text-xs" %}
+      {% trans "Save" as save_label %}
+      {% include "shared/partials/btn_pill.html" with variant="primary" type="submit" label=save_label icon="fa-solid fa-check text-xs" %}
     </div>
   </form>
 </section>

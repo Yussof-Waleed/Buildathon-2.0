@@ -7,13 +7,13 @@ from payments.models import Payment
 
 
 def _ensure_conversation(order: Order) -> Conversation:
-    conversation = order.conversations.first()
-    if conversation:
-        return conversation
-    return Conversation.objects.create(
-        customer=order.customer,
-        order=order,
-    )
+    try:
+        return order.conversation
+    except Conversation.DoesNotExist:
+        return Conversation.objects.create(
+            customer=order.customer,
+            order=order,
+        )
 
 
 def apply_successful_payment(
@@ -55,8 +55,8 @@ def apply_successful_payment(
         conversation = _ensure_conversation(order)
         Message.objects.create(
             conversation=conversation,
-            author_type=Message.AuthorType.SYSTEM,
-            body='تم تأكيد الدفع. كريم بدأ العمل على طلبك.',
+            author_type=Message.AuthorType.MECHANIC,
+            body='__payment__\nتم تأكيد الدفع — بدأت الشغل على طلبك.',
             channel=Message.Channel.WEB,
         )
 
@@ -83,12 +83,14 @@ def apply_failed_payment(
             status=Payment.Status.PENDING,
         ).order_by('-created_at').first()
 
+        recorded = False
         if pending:
             pending.status = Payment.Status.FAILED
             pending.paymob_transaction_id = paymob_transaction_id
             if intention_id:
                 pending.paymob_intention_id = intention_id
             pending.save()
+            recorded = True
         else:
             try:
                 Payment.objects.create(
@@ -98,8 +100,18 @@ def apply_failed_payment(
                     paymob_intention_id=intention_id,
                     paymob_transaction_id=paymob_transaction_id,
                 )
+                recorded = True
             except IntegrityError:
                 pass
+
+        if recorded:
+            conversation = _ensure_conversation(order)
+            Message.objects.create(
+                conversation=conversation,
+                author_type=Message.AuthorType.MECHANIC,
+                body='فشل الدفع — جرّب مرة أخرى أو تواصل مع كريم.',
+                channel=Message.Channel.WEB,
+            )
 
 
 def extract_order_id_from_callback(obj: dict) -> int | None:

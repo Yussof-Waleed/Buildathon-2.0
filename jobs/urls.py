@@ -13,6 +13,11 @@ urlpatterns = [
         name='customer-order-thread',
     ),
     path(
+        'orders/<int:order_id>/message/',
+        views.customer_order_message,
+        name='customer-order-message',
+    ),
+    path(
         'orders/<int:order_id>/cancel/',
         views.customer_order_cancel,
         name='customer-order-cancel',

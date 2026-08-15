@@ -22,6 +22,7 @@ def health(_request):
 
 
 urlpatterns = [
+    path('i18n/', include('django.conf.urls.i18n')),
     path('', home, name='home'),
     path('', include('jobs.urls')),
     path('k/', include('jobs.kareem_urls')),

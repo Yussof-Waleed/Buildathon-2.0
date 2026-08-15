@@ -3,18 +3,23 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from catalog.models import Diagnostic
 from jobs.kareem_analytics import order_status_counts, payment_summary
 from jobs.models import Order
 from jobs.services import (
+    _get_conversation,
     complete_order_step,
     mark_order_completed,
     mark_ready_for_pickup,
     piasters_from_egp,
+    post_mechanic_message,
     snapshot_diagnostic_on_order,
+    validate_audio_upload,
 )
 from jobs.views import ACTIVE_POLL_STATUSES
 from payments.models import Payment
@@ -128,13 +133,13 @@ def kareem_request_detail(request, order_id):
         Order.objects.select_related('customer', 'diagnostic').prefetch_related(
             'steps',
             'labels',
-            'conversations__messages',
+            'conversation__messages',
         ),
         pk=order_id,
     )
-    conversation = order.conversations.first()
+    conversation = _get_conversation(order)
     message_list = conversation.messages.all() if conversation else []
-    diagnostics = Diagnostic.objects.prefetch_related('steps').order_by('name')
+    diagnostics = Diagnostic.objects.prefetch_related('steps').order_by('title_ar')
     can_quote = order.status == Order.Status.PENDING_REVIEW
     can_confirm_paid = order.status == Order.Status.QUOTED
     can_mark_ready = order.status == Order.Status.IN_PROGRESS
@@ -163,15 +168,19 @@ def kareem_request_detail(request, order_id):
 @staff_required
 def kareem_request_thread(request, order_id):
     order = get_object_or_404(
-        Order.objects.prefetch_related('conversations__messages'),
+        Order.objects.prefetch_related('conversation__messages'),
         pk=order_id,
     )
-    conversation = order.conversations.first()
+    conversation = _get_conversation(order)
     message_list = conversation.messages.all() if conversation else []
     return render(
         request,
         'shared/partials/message_thread.html',
-        {'thread_messages': message_list},
+        {
+            'thread_messages': message_list,
+            'order': order,
+            'viewer': 'kareem',
+        },
     )
 
 
@@ -183,19 +192,22 @@ def kareem_request_quote(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
 
     if order.status != Order.Status.PENDING_REVIEW:
-        messages.error(request, 'لا يمكن تسعير هذا الطلب — الحالة ليست قيد المراجعة.')
+        messages.error(request, _('This order cannot be quoted — status is not pending review.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     diagnostic_id = request.POST.get('diagnostic_id')
     if not diagnostic_id:
-        messages.error(request, 'اختر تشخيصاً.')
+        messages.error(request, _('Choose a diagnostic.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     diagnostic = get_object_or_404(Diagnostic, pk=diagnostic_id)
     kareem_note = request.POST.get('kareem_note', '').strip()
 
     snapshot_diagnostic_on_order(order, diagnostic, kareem_note)
-    messages.success(request, f'تم إرسال عرض السعر — {diagnostic.price} جنيه')
+    messages.success(
+        request,
+        _('Quote sent — %(price)s EGP') % {'price': diagnostic.price},
+    )
 
     return redirect('kareem-request-detail', order_id=order_id)
 
@@ -208,7 +220,7 @@ def kareem_confirm_paid(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
 
     if order.status != Order.Status.QUOTED:
-        messages.error(request, 'لا يمكن تأكيد الدفع لهذا الطلب.')
+        messages.error(request, _('Payment cannot be confirmed for this order.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     transaction_id = f'dev-{order_id}-{int(timezone.now().timestamp())}'
@@ -218,7 +230,7 @@ def kareem_confirm_paid(request, order_id):
         transaction_id,
         amount_piasters,
     )
-    messages.success(request, 'تم تأكيد الدفع (تجريبي) — الطلب قيد التنفيذ.')
+    messages.success(request, _('Payment confirmed (dev) — work started.'))
     return redirect('kareem-request-detail', order_id=order_id)
 
 
@@ -230,11 +242,11 @@ def kareem_mark_ready(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
 
     if order.status != Order.Status.IN_PROGRESS:
-        messages.error(request, 'لا يمكن تعليم الطلب جاهز للاستلام.')
+        messages.error(request, _('Order cannot be marked ready for pickup.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     mark_ready_for_pickup(order)
-    messages.success(request, 'تم تعليم الطلب جاهز للاستلام — تم إشعار العميل.')
+    messages.success(request, _('Order marked ready for pickup — customer notified.'))
     return redirect('kareem-request-detail', order_id=order_id)
 
 
@@ -246,19 +258,19 @@ def kareem_complete_step(request, order_id, step_id):
     order = get_object_or_404(Order, pk=order_id)
 
     if order.status != Order.Status.IN_PROGRESS:
-        messages.error(request, 'لا يمكن إتمام خطوات قبل بدء العمل.')
+        messages.error(request, _('Steps cannot be completed before work starts.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     if not order.steps.filter(pk=step_id).exists():
-        messages.error(request, 'الخطوة غير موجودة.')
+        messages.error(request, _('Step not found.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     complete_order_step(order, step_id)
     order.refresh_from_db()
     if order.status == Order.Status.READY_FOR_PICKUP:
-        messages.success(request, 'تم إنجاز كل الخطوات — الطلب جاهز للاستلام.')
+        messages.success(request, _('All steps done — order ready for pickup.'))
     else:
-        messages.success(request, 'تم إنجاز الخطوة.')
+        messages.success(request, _('Step completed.'))
     return redirect('kareem-request-detail', order_id=order_id)
 
 
@@ -270,9 +282,31 @@ def kareem_mark_completed(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
 
     if order.status != Order.Status.READY_FOR_PICKUP:
-        messages.error(request, 'لا يمكن تعليم الطلب مكتمل.')
+        messages.error(request, _('Order cannot be marked completed.'))
         return redirect('kareem-request-detail', order_id=order_id)
 
     mark_order_completed(order)
-    messages.success(request, 'تم تعليم الطلب مكتمل — تم استلام العربية.')
+    messages.success(request, _('Order completed — car collected.'))
+    return redirect('kareem-request-detail', order_id=order_id)
+
+
+@staff_required
+def kareem_request_message(request, order_id):
+    if request.method != 'POST':
+        return redirect('kareem-request-detail', order_id=order_id)
+
+    order = get_object_or_404(Order, pk=order_id)
+    body = request.POST.get('body', '').strip()
+    audio = request.FILES.get('audio')
+
+    if not body and not audio:
+        return redirect('kareem-request-detail', order_id=order_id)
+
+    try:
+        validate_audio_upload(audio)
+    except ValidationError:
+        messages.error(request, _('Invalid audio recording.'))
+        return redirect('kareem-request-detail', order_id=order_id)
+
+    post_mechanic_message(order, body, audio=audio)
     return redirect('kareem-request-detail', order_id=order_id)

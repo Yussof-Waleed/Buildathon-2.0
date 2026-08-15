@@ -1,22 +1,97 @@
 from django import template
-from django.urls import reverse
-from django.utils.html import escape, format_html
+from django.utils.translation import gettext as _
+
+from catalog.i18n import localized_field
 
 register = template.Library()
 
-STATUS_AR = {
-    'pending_review': 'قيد المراجعة',
-    'quoted': 'بانتظار الدفع',
-    'in_progress': 'جاري الشغل',
-    'ready_for_pickup': 'جاهزة للاستلام',
-    'completed': 'تم الاستلام',
-    'cancelled': 'ملغي',
-}
+
+def _message_kind(body: str) -> str:
+    if not body:
+        return 'empty'
+    text = body.strip()
+    if text.startswith('__quote__'):
+        return 'quote'
+    if text.startswith('__step__'):
+        return 'step'
+    if text.startswith('__ready__'):
+        return 'ready'
+    if text.startswith('__payment__'):
+        return 'payment'
+    if text.startswith('[order:'):
+        return 'order_link'
+    return 'text'
+
+
+def _parse_quote(body: str) -> dict:
+    lines = body.strip().split('\n')
+    title = lines[1].strip() if len(lines) > 1 else ''
+    price = lines[2].strip() if len(lines) > 2 else ''
+    steps = []
+    note_lines = []
+    for line in lines[3:]:
+        if '|' in line:
+            step_title, minutes = line.rsplit('|', 1)
+            if minutes.strip().isdigit():
+                steps.append({
+                    'title': step_title.strip(),
+                    'minutes': minutes.strip(),
+                })
+                continue
+        note_lines.append(line)
+    return {
+        'title': title,
+        'price': price,
+        'steps': steps,
+        'note': '\n'.join(note_lines).strip(),
+    }
+
+
+def _quote_from_order(order) -> dict:
+    steps = [
+        {
+            'title': step.localized_title,
+            'minutes': str(step.expected_minutes),
+            'description': step.localized_description,
+        }
+        for step in order.steps.all()
+    ]
+    return {
+        'title': order.localized_quoted_title,
+        'price': str(order.quoted_price),
+        'steps': steps,
+        'note': order.kareem_note or '',
+    }
+
+
+def _step_title_from_order(order, body: str) -> str:
+    parsed_title = _body_after_prefix(body)
+    if not order:
+        return parsed_title
+    for step in order.steps.all():
+        if step.title_en == parsed_title or step.title_ar == parsed_title:
+            return step.localized_title
+    return parsed_title
+
+
+def _parse_order_link(body: str) -> dict:
+    text = body.strip()
+    bracket = text.index(']')
+    order_id = int(text[7:bracket])
+    rest = text[bracket + 1:].strip()
+    return {'order_id': order_id, 'text': rest}
+
+
+def _body_after_prefix(body: str) -> str:
+    text = body.strip()
+    if '\n' in text:
+        return text.split('\n', 1)[1].strip()
+    return text.replace('__step__', '').replace('__ready__', '').replace('__payment__', '').strip()
 
 
 @register.filter
-def status_ar(status: str) -> str:
-    return STATUS_AR.get(status, status)
+def localized(obj, field: str) -> str:
+    return localized_field(obj, field)
 
 
 @register.filter
@@ -26,24 +101,47 @@ def piasters_egp(piasters) -> str:
     return f'{int(piasters) / 100:.2f}'
 
 
+@register.inclusion_tag('shared/partials/message_bubble.html')
+def message_bubble(message, order=None, paymob_ready=False, viewer='customer'):
+    body = message.body or ''
+    kind = _message_kind(body)
+    ctx = {
+        'message': message,
+        'kind': kind,
+        'viewer': viewer,
+        'order': order,
+        'paymob_ready': paymob_ready,
+        'show_pay': (
+            kind == 'quote'
+            and order is not None
+            and order.status == 'quoted'
+            and paymob_ready
+        ),
+        'show_pay_waiting': (
+            kind == 'quote'
+            and order is not None
+            and order.status == 'quoted'
+            and not paymob_ready
+        ),
+    }
+    if kind == 'quote':
+        if order and order.quoted_price is not None:
+            ctx['quote'] = _quote_from_order(order)
+        else:
+            ctx['quote'] = _parse_quote(body)
+    elif kind == 'step':
+        ctx['step_title'] = _step_title_from_order(order, body)
+    elif kind == 'order_link':
+        ctx['order_link'] = _parse_order_link(body)
+    elif kind in ('ready', 'payment', 'text'):
+        ctx['text'] = _body_after_prefix(body) if kind != 'text' else body
+    return ctx
+
+
 @register.filter
-def chat_message_html(body: str):
-    """Render [order:id] prefix as link to order detail."""
-    if not body:
-        return ''
-    text = body.strip()
-    if text.startswith('[order:') and ']' in text:
-        bracket = text.index(']')
-        order_part = text[7:bracket]
-        try:
-            order_id = int(order_part)
-        except ValueError:
-            return format_html('<span dir="auto">{}</span>', escape(text))
-        rest = text[bracket + 1:].strip()
-        url = reverse('customer-order-detail', args=[order_id])
-        return format_html(
-            '<span dir="auto">{}</span> <a href="{}" class="text-copper-bright no-underline">افتح الطلب</a>',
-            escape(rest),
-            url,
-        )
-    return format_html('<span dir="auto">{}</span>', escape(text))
+def author_label(author_type: str, viewer: str = 'customer') -> str:
+    if author_type == 'customer':
+        return _('You') if viewer == 'customer' else _('Customer')
+    if author_type in ('mechanic', 'system'):
+        return _('Kareem')
+    return ''

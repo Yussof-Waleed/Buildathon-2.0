@@ -19,6 +19,7 @@ from jobs.kareem_views import (
     kareem_money,
     kareem_overview,
     kareem_request_detail,
+    kareem_request_message,
     kareem_request_quote,
     kareem_request_thread,
     kareem_requests_list,
@@ -46,6 +47,11 @@ urlpatterns = [
     path('labels/<int:label_id>/edit/', kareem_label_edit, name='kareem-label-edit'),
     path('labels/<int:label_id>/delete/', kareem_label_delete, name='kareem-label-delete'),
     path('requests/<int:order_id>/', kareem_request_detail, name='kareem-request-detail'),
+    path(
+        'requests/<int:order_id>/message/',
+        kareem_request_message,
+        name='kareem-request-message',
+    ),
     path(
         'requests/<int:order_id>/thread/',
         kareem_request_thread,

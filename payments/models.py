@@ -1,13 +1,14 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from jobs.models import Order
 
 
 class Payment(models.Model):
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        PAID = 'paid', 'Paid'
-        FAILED = 'failed', 'Failed'
+        PENDING = 'pending', _('Pending')
+        PAID = 'paid', _('Paid')
+        FAILED = 'failed', _('Failed')
 
     order = models.ForeignKey(
         Order,

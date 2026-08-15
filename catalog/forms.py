@@ -3,39 +3,35 @@ from django.forms import inlineformset_factory
 
 from catalog.models import Diagnostic, DiagnosticStep, Label
 
+INPUT_CLASS = (
+    'w-full rounded-xl border border-white/10 bg-black/30 '
+    'px-4 py-3 text-paper focus:border-copper-bright focus:outline-none'
+)
+STEP_INPUT_CLASS = (
+    'w-full rounded-lg border border-white/10 bg-black/30 '
+    'px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none'
+)
+
 
 class LabelForm(forms.ModelForm):
     class Meta:
         model = Label
-        fields = ('name',)
+        fields = ('title_ar', 'title_en')
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': (
-                    'w-full rounded-xl border border-white/10 bg-black/30 '
-                    'px-4 py-3 text-paper focus:border-copper-bright focus:outline-none'
-                ),
-                'dir': 'auto',
-            }),
+            'title_ar': forms.TextInput(attrs={'class': INPUT_CLASS, 'dir': 'rtl'}),
+            'title_en': forms.TextInput(attrs={'class': INPUT_CLASS, 'dir': 'ltr'}),
         }
 
 
 class DiagnosticForm(forms.ModelForm):
     class Meta:
         model = Diagnostic
-        fields = ('name', 'price')
+        fields = ('title_ar', 'title_en', 'price')
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': (
-                    'w-full rounded-xl border border-white/10 bg-black/30 '
-                    'px-4 py-3 text-paper focus:border-copper-bright focus:outline-none'
-                ),
-                'dir': 'auto',
-            }),
+            'title_ar': forms.TextInput(attrs={'class': INPUT_CLASS, 'dir': 'rtl'}),
+            'title_en': forms.TextInput(attrs={'class': INPUT_CLASS, 'dir': 'ltr'}),
             'price': forms.NumberInput(attrs={
-                'class': (
-                    'w-full rounded-xl border border-white/10 bg-black/30 '
-                    'px-4 py-3 text-paper focus:border-copper-bright focus:outline-none'
-                ),
+                'class': INPUT_CLASS,
                 'step': '0.01',
                 'min': '0',
             }),
@@ -45,35 +41,33 @@ class DiagnosticForm(forms.ModelForm):
 class DiagnosticStepForm(forms.ModelForm):
     class Meta:
         model = DiagnosticStep
-        fields = ('title', 'description', 'expected_minutes', 'sort_order')
+        fields = (
+            'title_ar',
+            'title_en',
+            'description_ar',
+            'description_en',
+            'expected_minutes',
+            'sort_order',
+        )
         widgets = {
-            'title': forms.TextInput(attrs={
-                'class': (
-                    'w-full rounded-lg border border-white/10 bg-black/30 '
-                    'px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none'
-                ),
-                'dir': 'auto',
-            }),
-            'description': forms.Textarea(attrs={
-                'class': (
-                    'w-full rounded-lg border border-white/10 bg-black/30 '
-                    'px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none'
-                ),
+            'title_ar': forms.TextInput(attrs={'class': STEP_INPUT_CLASS, 'dir': 'rtl'}),
+            'title_en': forms.TextInput(attrs={'class': STEP_INPUT_CLASS, 'dir': 'ltr'}),
+            'description_ar': forms.Textarea(attrs={
+                'class': STEP_INPUT_CLASS,
                 'rows': 2,
-                'dir': 'auto',
+                'dir': 'rtl',
+            }),
+            'description_en': forms.Textarea(attrs={
+                'class': STEP_INPUT_CLASS,
+                'rows': 2,
+                'dir': 'ltr',
             }),
             'expected_minutes': forms.NumberInput(attrs={
-                'class': (
-                    'w-full rounded-lg border border-white/10 bg-black/30 '
-                    'px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none'
-                ),
+                'class': STEP_INPUT_CLASS,
                 'min': '1',
             }),
             'sort_order': forms.NumberInput(attrs={
-                'class': (
-                    'w-full rounded-lg border border-white/10 bg-black/30 '
-                    'px-3 py-2 text-sm text-paper focus:border-copper-bright focus:outline-none'
-                ),
+                'class': STEP_INPUT_CLASS,
                 'min': '0',
             }),
         }

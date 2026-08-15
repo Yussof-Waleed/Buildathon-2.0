@@ -1,10 +1,10 @@
 {% extends "customer/base.html" %}
-{% load warsha_ui %}
+{% load warsha_ui i18n %}
 
 {% block title %}ورشة — طلباتي{% endblock %}
 
 {% block customer_content %}
-<div class="flex-1 p-4">
+<div class="min-h-0 flex-1 overflow-y-auto p-4">
   <div class="mb-5">
     <h1 class="text-2xl font-extrabold text-paper">طلباتي</h1>
     <p class="mt-1 text-sm text-paper-muted">كل طلباتك في ورشة كريم</p>
@@ -22,13 +22,15 @@
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <strong class="text-paper">طلب <bdi dir="ltr">#{{ order.pk }}</bdi></strong>
-                  <span class="text-sm font-semibold text-copper-bright">{{ order.status|status_ar }}</span>
+                  <span class="text-sm font-semibold text-copper-bright">{{ order.get_status_display }}</span>
                 </div>
                 <p class="mt-1 truncate text-sm text-paper-muted" dir="auto">
-                  {% if order.diagnostic %}
-                    {{ order.diagnostic.name }}
+                  {% if order.localized_quoted_title %}
+                    {{ order.localized_quoted_title }}
+                  {% elif order.diagnostic %}
+                    {{ order.diagnostic.localized_title }}
                   {% else %}
-                    قيد المراجعة
+                    {% trans "Pending review" %}
                   {% endif %}
                 </p>
                 {% if order.quoted_price %}

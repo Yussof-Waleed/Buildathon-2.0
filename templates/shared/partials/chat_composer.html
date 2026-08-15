@@ -1,0 +1,248 @@
+{% csrf_token %}
+<input type="file" name="audio" id="audio-input" class="hidden" accept="audio/webm,audio/mp4,audio/ogg">
+
+<div id="composer-normal" class="flex items-end gap-2">
+  <textarea
+    id="body"
+    name="body"
+    rows="1"
+    dir="auto"
+    placeholder="{{ composer_placeholder|default:'اكتب رسالتك…' }}"
+    aria-label="{{ composer_aria|default:'رسالتك' }}"
+    class="max-h-28 min-h-11 flex-1 resize-none rounded-3xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-paper placeholder:text-paper-muted/50 focus:border-copper focus:ring-copper/20"
+  ></textarea>
+  <button
+    type="button"
+    id="mic-btn"
+    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/40 text-copper-bright transition hover:border-copper/40"
+    aria-label="تسجيل صوتي"
+  >
+    <i class="fa-solid fa-microphone"></i>
+  </button>
+  <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-copper-bright to-copper-dim text-garage-950 shadow-glow transition active:scale-95" aria-label="إرسال">
+    <i class="fa-solid fa-paper-plane -scale-x-100"></i>
+  </button>
+</div>
+
+<div id="composer-recording" class="hidden items-center gap-2">
+  <button
+    type="button"
+    id="record-cancel-btn"
+    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/40 text-paper-muted transition hover:border-red-500/40 hover:text-red-300"
+    aria-label="إلغاء التسجيل"
+  >
+    <i class="fa-solid fa-trash-can text-sm"></i>
+  </button>
+  <div class="flex min-h-11 flex-1 items-center gap-2 rounded-3xl border border-red-500/25 bg-red-500/5 px-4 py-2">
+    <span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-400" aria-hidden="true"></span>
+    <span id="record-timer" class="font-en text-sm tabular-nums text-paper" dir="ltr">0:00</span>
+  </div>
+  <button
+    type="button"
+    id="record-send-btn"
+    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-copper-bright to-copper-dim text-garage-950 shadow-glow transition active:scale-95"
+    aria-label="إرسال التسجيل"
+  >
+    <i class="fa-solid fa-paper-plane -scale-x-100"></i>
+  </button>
+</div>
+
+<script>
+  (function () {
+    const form = document.getElementById('chat-form');
+    const bodyInput = document.getElementById('body');
+    const audioInput = document.getElementById('audio-input');
+    const micBtn = document.getElementById('mic-btn');
+    const composerNormal = document.getElementById('composer-normal');
+    const composerRecording = document.getElementById('composer-recording');
+    const recordTimer = document.getElementById('record-timer');
+    const recordCancelBtn = document.getElementById('record-cancel-btn');
+    const recordSendBtn = document.getElementById('record-send-btn');
+
+    if (!form || !micBtn) return;
+
+    let mediaRecorder = null;
+    let chunks = [];
+    let stream = null;
+    let recordStart = 0;
+    let timerInterval = null;
+    let mimeType = 'audio/webm';
+    let isRecording = false;
+    let shouldSubmit = false;
+    let starting = false;
+
+    function pickMimeType() {
+      const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+      for (const t of types) {
+        if (MediaRecorder.isTypeSupported(t)) return t;
+      }
+      return '';
+    }
+
+    function formatTime(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      return m + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function showRecordingUI() {
+      composerNormal.classList.add('hidden');
+      composerRecording.classList.remove('hidden');
+      composerRecording.classList.add('flex');
+    }
+
+    function hideRecordingUI() {
+      composerRecording.classList.add('hidden');
+      composerRecording.classList.remove('flex');
+      composerNormal.classList.remove('hidden');
+      recordTimer.textContent = '0:00';
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function cleanupStream() {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
+    }
+
+    function resetRecordingState() {
+      stopTimer();
+      hideRecordingUI();
+      isRecording = false;
+      starting = false;
+      shouldSubmit = false;
+      chunks = [];
+      cleanupStream();
+      mediaRecorder = null;
+    }
+
+    function attachFileAndSubmit() {
+      const duration = Date.now() - recordStart;
+      if (chunks.length === 0 || duration < 400) {
+        resetRecordingState();
+        return;
+      }
+
+      const blobType = mimeType.split(';')[0] || 'audio/webm';
+      const ext = blobType.includes('mp4') ? 'm4a' : blobType.includes('ogg') ? 'ogg' : 'webm';
+      const blob = new Blob(chunks, { type: blobType });
+      const file = new File([blob], 'voice-' + Date.now() + '.' + ext, { type: blobType });
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      audioInput.files = dt.files;
+      form.submit();
+    }
+
+    function stopRecording(submit) {
+      shouldSubmit = submit;
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        if (!submit) resetRecordingState();
+        return;
+      }
+      try {
+        mediaRecorder.stop();
+      } catch {
+        resetRecordingState();
+      }
+    }
+
+    async function startRecording() {
+      if (isRecording || starting) return;
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        alert('التسجيل الصوتي غير متاح على هذا المتصفح.');
+        return;
+      }
+
+      starting = true;
+      shouldSubmit = false;
+      chunks = [];
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        starting = false;
+        alert('لم نتمكن من الوصول للميكروفون. اسمح للموقع استخدام الميكروفون من إعدادات المتصفح.');
+        return;
+      }
+
+      mimeType = pickMimeType();
+      const options = mimeType ? { mimeType } : undefined;
+
+      try {
+        mediaRecorder = new MediaRecorder(stream, options);
+      } catch {
+        starting = false;
+        cleanupStream();
+        alert('التسجيل الصوتي غير متاح على هذا المتصفح.');
+        return;
+      }
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const submit = shouldSubmit;
+        cleanupStream();
+        isRecording = false;
+        starting = false;
+
+        if (submit) {
+          attachFileAndSubmit();
+        } else {
+          resetRecordingState();
+        }
+      };
+
+      mediaRecorder.onerror = () => {
+        resetRecordingState();
+      };
+
+      mediaRecorder.start(200);
+      recordStart = Date.now();
+      isRecording = true;
+      starting = false;
+      showRecordingUI();
+
+      timerInterval = setInterval(() => {
+        recordTimer.textContent = formatTime(Date.now() - recordStart);
+      }, 200);
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (!isRecording && !starting) startRecording();
+    });
+
+    recordCancelBtn.addEventListener('click', () => {
+      shouldSubmit = false;
+      stopRecording(false);
+    });
+
+    recordSendBtn.addEventListener('click', () => {
+      shouldSubmit = true;
+      stopRecording(true);
+    });
+
+    form.addEventListener('submit', (e) => {
+      if (isRecording || starting) {
+        e.preventDefault();
+        return;
+      }
+      const hasText = bodyInput.value.trim().length > 0;
+      const hasAudio = audioInput.files.length > 0;
+      if (!hasText && !hasAudio) {
+        e.preventDefault();
+        bodyInput.focus();
+      }
+    });
+  })();
+</script>

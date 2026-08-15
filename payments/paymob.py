@@ -43,7 +43,12 @@ def create_payment_intention(order) -> tuple[str, str]:
 
     amount = piasters_from_egp(order.quoted_price)
     phone = order.customer.phone
-    item_name = order.diagnostic.name if order.diagnostic else f'Order {order.pk}'
+    if order.quoted_title_en:
+        item_name = order.quoted_title_en
+    elif order.diagnostic_id:
+        item_name = order.diagnostic.title_en
+    else:
+        item_name = f'Order {order.pk}'
 
     payload = {
         'amount': amount,

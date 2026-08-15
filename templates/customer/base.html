@@ -1,20 +1,28 @@
 {% extends "shared/base.html" %}
 
-{% block page_class %}mx-auto max-w-lg px-0 py-0 pb-20{% endblock %}
+{% block site_header %}{% endblock %}
+
+{% block page_class %}flex min-h-dvh w-full items-stretch justify-center p-0 md:p-6{% endblock %}
 
 {% block content %}
-<div class="flex min-h-[calc(100dvh-57px)] flex-col">
+<div class="relative flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-garage-950 md:min-h-[min(844px,calc(100dvh-3rem))] md:rounded-[2rem] md:border md:border-copper/25 md:shadow-2xl">
   {% if customer %}
-    <div class="flex items-center justify-between border-b border-white/10 bg-garage-950/90 px-4 py-2.5 text-sm backdrop-blur-xl">
-      <span class="text-paper-muted">
-        <i class="fa-solid fa-phone me-1.5 text-xs text-copper-bright"></i>
+    <header class="flex shrink-0 items-center justify-between border-b border-white/10 bg-garage-950/95 px-4 py-3 backdrop-blur-xl">
+      <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-base font-extrabold text-paper no-underline">
+        <i class="fa-solid fa-screwdriver-wrench text-lg text-copper-bright" aria-hidden="true"></i>
+        <span class="inline-flex items-baseline gap-1.5" dir="ltr">
+          <span lang="ar">ورشة</span>
+          <span class="font-en text-xs font-medium text-copper-bright" lang="en">Warsha</span>
+        </span>
+      </a>
+      <span class="text-xs text-paper-muted">
+        <i class="fa-solid fa-phone me-1 text-copper-bright" aria-hidden="true"></i>
         <bdi dir="ltr">{{ customer.phone }}</bdi>
       </span>
-      <a href="{% url 'home' %}" class="text-xs text-paper-muted no-underline transition hover:text-copper-bright">ورشة</a>
-    </div>
+    </header>
   {% endif %}
 
-  <div class="flex flex-1 flex-col">
+  <div class="flex min-h-0 flex-1 flex-col {% if nav_active %}pb-20{% endif %}">
     {% block customer_content %}{% endblock %}
   </div>
 

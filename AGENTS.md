@@ -53,9 +53,9 @@ flowchart LR
 
 | Screen | Purpose |
 |--------|---------|
-| **Chat** (default) | Send text and/or audio; AI routes to new order, existing order, or irrelevant reply |
+| **Chat** (default) | Unbound intake. Labeler binds this thread to an order, replies if irrelevant, or (from an order chat) forks a new repair |
 | **Orders list** | All orders with status, progress, line actions |
-| **Order detail** | Conversation, agreement (diagnostic + price + ETA), checkout or cancel, timeline |
+| **Order detail** | Dedicated order chat (both parties send), quote bubble + checkout or cancel, progress |
 
 ### Kareem portal (`/k/`, staff-only)
 
@@ -91,7 +91,7 @@ flowchart LR
 | **Diagnostic** | Reusable quote template: name, price (EGP), ordered **Steps** |
 | **Step** | One repair phase: title, description, expected duration (minutes) |
 | **Order** | The single work entity. Customer UI: "orders". Kareem UI: "requests". **Same model.** |
-| **Conversation** | Message thread. Intake inbox (`order=null`) or per-order thread |
+| **Conversation** | One chat thread. Unbound (`order=null`) until the Labeler binds it to an Order. After bind, this **is** the order chat. Forked new repairs set `parent` to the previous conversation. |
 | **Message** | Text and/or audio. Channel: `web` now, `whatsapp` later |
 | **Agreement** | Snapshot of diagnostic + price + steps on the Order at quote time |
 | **Payment** | Paymob intention/transaction tied to one Order |
@@ -122,7 +122,8 @@ Order ──FK── Customer
 Order ──M2M── Label
 Order ──FK── Diagnostic (optional, source template)
 Order ──1:N── OrderStep (snapshot at quote time)
-Conversation ──FK── Order (nullable; null = intake inbox)
+Conversation ──OneToOne── Order (nullable; null = unbound intake)
+Conversation ──FK── Conversation.parent (nullable; set on fork)
 Conversation ──1:N── Message
 Payment ──FK── Order
 ```
@@ -203,27 +204,35 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-  Msg[Customer text and/or audio] --> Labeler[Labeler graph]
-  Labeler -->|new_request| NewOrder[Create Order pending_review]
-  Labeler -->|existing_order| Attach[Attach to Order thread]
-  Labeler -->|irrelevant| Reply[Answer without Order]
-  NewOrder --> Tagger[Tagger graph]
-  Tagger --> Labels[Assign Kareem labels]
-  Labels --> Wait[Wait for Kareem]
+  Msg[Customer text and/or audio] --> Labeler[Labeler guard]
+  Labeler -->|unbound new_request| Bind[Bind this Conversation to new Order]
+  Labeler -->|unbound irrelevant| Reply[Arabic reply; stay intake]
+  Labeler -->|bound followup| Stay[Message stays on this order chat]
+  Labeler -->|bound new_request| Fork[New Conversation parent=current; move triggering message]
+  Bind --> Tagger[Tagger assigns labels]
+  Fork --> Tagger
+  Tagger --> Wait[Wait for Kareem]
   Wait --> Quote[Kareem picks or creates Diagnostic]
-  Quote --> Notify[System message plus checkout]
+  Quote --> Notify[Kareem quote bubble plus checkout]
 ```
 
-### Labeler (LangGraph)
+### Labeler (one-shot via Cursor adapter)
 
-Input: customer message (+ optional audio transcript).
+Input: customer message (+ optional audio placeholder), current conversation (bound order id or unbound), open orders.
+
 Output: one of:
 
-- `new_request` → create `Order` (`pending_review`), run Tagger
-- `existing_order` → attach message to matching open order for this customer
-- `irrelevant` → reply in chat, no Order created
+- `new_request` on **unbound** chat → create `Order` (`pending_review`), **bind this conversation**, run Tagger
+- `new_request` on **bound** chat → **fork**: new conversation with `parent` set, **move** the triggering customer message, bind the child to the new Order, Tagger
+- `existing_order` on unbound → move the message onto that order's dedicated conversation
+- `irrelevant` on unbound → reply in chat, no Order
+- On a **bound** chat, follow-ups and off-topic chat **stay** (Kareem replies as a person). Only a genuinely new repair forks.
 
-"Existing" = this customer's orders in `pending_review`, `quoted`, `in_progress`, or `ready_for_pickup`.
+Do **not** copy the same customer message onto a second conversation. One chat becomes the order thread.
+
+"Open" = this customer's orders in `pending_review`, `quoted`, `in_progress`, or `ready_for_pickup`.
+
+Both customer and Kareem send free-form messages on the dedicated order chat. Labeler runs on **customer** sends only.
 
 ### Tagger (LangGraph)
 
@@ -366,6 +375,7 @@ static/
 - Let Kareem complete steps before `in_progress`
 - Call any LLM except the Cursor adapter
 - Create a parallel `Request` model
+- Copy the same customer message onto a second conversation (bind in place; fork by moving)
 - Invent a second source of truth for step ETA
 - Commit secrets or read `.env` into chat
 - Hardcode user-facing strings (use i18n)
@@ -400,16 +410,17 @@ curl http://127.0.0.1:8000/   # {"status":"ok"}
 ## 12. End-to-end happy path (reference)
 
 1. Customer opens chat, enters phone (no OTP), sends text + engine audio
-2. Labeler → `new_request`; Tagger assigns labels (e.g. "engine noise", "Shubra")
-3. Order created: `pending_review`. Kareem sees it in requests list
+2. Labeler → `new_request`; **this chat binds** to a new Order (`pending_review`); Tagger assigns labels
+3. Kareem sees it in requests list and can reply in the same thread
 4. Kareem listens to audio, picks existing Diagnostic (or creates one on the fly)
 5. System snapshots diagnostic → OrderSteps; status → `quoted`
-6. Customer gets system message: diagnostic summary, Kareem's note, checkout link, cancel
+6. Customer gets Kareem quote bubble: diagnostic summary, note, checkout
 7. Customer pays via Paymob Unified Checkout
 8. Webhook HMAC verified → `in_progress`; Kareem notified
-9. Kareem completes steps one by one (or instant complete); customer notified each time
-10. All steps done → `ready_for_pickup`; customer notified to collect car
-11. Kareem marks `completed` when car is collected
+9. Follow-ups stay on this order chat. A **new** repair from this thread **forks** a child conversation (parent pointer; triggering message moved)
+10. Kareem completes steps one by one (or instant complete); customer notified each time
+11. All steps done → `ready_for_pickup`; customer notified to collect car
+12. Kareem marks `completed` when car is collected
 
 ---
 

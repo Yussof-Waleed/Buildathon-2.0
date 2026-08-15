@@ -1,17 +1,19 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from accounts.models import Customer
+from catalog.i18n import localized_field
 from catalog.models import Diagnostic, Label
 
 
 class Order(models.Model):
     class Status(models.TextChoices):
-        PENDING_REVIEW = 'pending_review', 'Pending review'
-        QUOTED = 'quoted', 'Quoted'
-        IN_PROGRESS = 'in_progress', 'In progress'
-        READY_FOR_PICKUP = 'ready_for_pickup', 'Ready for pickup'
-        COMPLETED = 'completed', 'Completed'
-        CANCELLED = 'cancelled', 'Cancelled'
+        PENDING_REVIEW = 'pending_review', _('Pending review')
+        QUOTED = 'quoted', _('Quoted')
+        IN_PROGRESS = 'in_progress', _('In progress')
+        READY_FOR_PICKUP = 'ready_for_pickup', _('Ready for pickup')
+        COMPLETED = 'completed', _('Completed')
+        CANCELLED = 'cancelled', _('Cancelled')
 
     status = models.CharField(
         max_length=20,
@@ -33,6 +35,8 @@ class Order(models.Model):
         related_name='orders',
         help_text='Source template used at quote time',
     )
+    quoted_title_ar = models.CharField(max_length=200, blank=True)
+    quoted_title_en = models.CharField(max_length=200, blank=True)
     quoted_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -49,6 +53,14 @@ class Order(models.Model):
 
     def __str__(self):
         return f'Order #{self.pk} — {self.customer.phone} ({self.status})'
+
+    @property
+    def localized_quoted_title(self) -> str:
+        if self.quoted_title_ar or self.quoted_title_en:
+            return localized_field(self, 'quoted_title')
+        if self.diagnostic_id:
+            return self.diagnostic.localized_title
+        return ''
 
     @property
     def remaining_eta_minutes(self) -> int:
@@ -72,8 +84,10 @@ class OrderStep(models.Model):
         on_delete=models.CASCADE,
         related_name='steps',
     )
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
+    title_ar = models.CharField(max_length=200)
+    title_en = models.CharField(max_length=200)
+    description_ar = models.TextField(blank=True)
+    description_en = models.TextField(blank=True)
     expected_minutes = models.PositiveIntegerField(default=30)
     sort_order = models.PositiveSmallIntegerField(default=0)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -82,7 +96,15 @@ class OrderStep(models.Model):
         ordering = ['sort_order', 'id']
 
     def __str__(self):
-        return self.title
+        return self.localized_title
+
+    @property
+    def localized_title(self) -> str:
+        return localized_field(self, 'title')
+
+    @property
+    def localized_description(self) -> str:
+        return localized_field(self, 'description')
 
 
 class Conversation(models.Model):
@@ -91,12 +113,21 @@ class Conversation(models.Model):
         on_delete=models.CASCADE,
         related_name='conversations',
     )
-    order = models.ForeignKey(
+    order = models.OneToOneField(
         Order,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='conversations',
+        related_name='conversation',
+        help_text='Null = intake not yet bound to an order. One dedicated chat per order.',
+    )
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='children',
+        help_text='Set when this chat was forked from another order chat.',
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -111,13 +142,13 @@ class Conversation(models.Model):
 
 class Message(models.Model):
     class AuthorType(models.TextChoices):
-        CUSTOMER = 'customer', 'Customer'
-        MECHANIC = 'mechanic', 'Mechanic'
-        SYSTEM = 'system', 'System'
+        CUSTOMER = 'customer', _('Customer')
+        MECHANIC = 'mechanic', _('Mechanic')
+        SYSTEM = 'system', _('System')
 
     class Channel(models.TextChoices):
-        WEB = 'web', 'Web'
-        WHATSAPP = 'whatsapp', 'WhatsApp'
+        WEB = 'web', _('Web')
+        WHATSAPP = 'whatsapp', _('WhatsApp')
 
     conversation = models.ForeignKey(
         Conversation,

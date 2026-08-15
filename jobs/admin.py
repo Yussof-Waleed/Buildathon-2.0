@@ -6,8 +6,19 @@ from jobs.models import Conversation, Message, Order, OrderStep
 class OrderStepInline(admin.TabularInline):
     model = OrderStep
     extra = 0
-    fields = ('title', 'expected_minutes', 'sort_order', 'completed_at')
-    readonly_fields = ('title', 'expected_minutes', 'sort_order')
+    fields = (
+        'title_ar',
+        'title_en',
+        'expected_minutes',
+        'sort_order',
+        'completed_at',
+    )
+    readonly_fields = (
+        'title_ar',
+        'title_en',
+        'expected_minutes',
+        'sort_order',
+    )
 
 
 class MessageInline(admin.TabularInline):
@@ -36,8 +47,9 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer', 'order', 'created_at')
+    list_display = ('id', 'customer', 'order', 'parent', 'created_at')
     list_filter = ('customer',)
+    raw_id_fields = ('parent',)
     inlines = [MessageInline]
 
 

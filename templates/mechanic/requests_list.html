@@ -47,10 +47,10 @@
             <tr class="border-b border-white/10 transition hover:bg-copper/5">
               <td class="px-2 py-2"><bdi dir="ltr">{{ order.pk }}</bdi></td>
               <td class="px-2 py-2"><bdi dir="ltr">{{ order.customer.phone }}</bdi></td>
-              <td class="px-2 py-2 text-xs">{{ order.status|status_ar }}</td>
+              <td class="px-2 py-2 text-xs">{{ order.get_status_display }}</td>
               <td class="px-2 py-2 text-xs">
                 {% for label in order.labels.all %}
-                  <span class="me-1 rounded-full border border-copper/30 bg-copper/10 px-1.5 py-0.5 text-copper-bright">{{ label.name }}</span>
+                  <span class="me-1 rounded-full border border-copper/30 bg-copper/10 px-1.5 py-0.5 text-copper-bright">{{ label.localized_title }}</span>
                 {% endfor %}
               </td>
               <td class="px-2 py-2 text-xs text-paper-muted"><bdi dir="ltr">{{ order.created_at|date:"d/m H:i" }}</bdi></td>
@@ -68,11 +68,11 @@
         <a href="{% url 'kareem-request-detail' order_id=order.pk %}" class="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 px-3 py-3 no-underline">
           <div>
             <strong class="text-sm text-paper"><bdi dir="ltr">#{{ order.pk }}</bdi></strong>
-            <p class="text-xs text-paper-muted"><bdi dir="ltr">{{ order.customer.phone }}</bdi> · {{ order.status|status_ar }}</p>
+            <p class="text-xs text-paper-muted"><bdi dir="ltr">{{ order.customer.phone }}</bdi> · {{ order.get_status_display }}</p>
             {% if order.labels.all %}
               <p class="mt-1 flex flex-wrap gap-1">
                 {% for label in order.labels.all %}
-                  <span class="rounded-full border border-copper/30 bg-copper/10 px-1.5 py-0.5 text-[0.65rem] text-copper-bright">{{ label.name }}</span>
+                  <span class="rounded-full border border-copper/30 bg-copper/10 px-1.5 py-0.5 text-[0.65rem] text-copper-bright">{{ label.localized_title }}</span>
                 {% endfor %}
               </p>
             {% endif %}

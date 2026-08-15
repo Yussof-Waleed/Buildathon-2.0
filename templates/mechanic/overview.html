@@ -54,7 +54,7 @@
                 </a>
                 <span class="text-paper-muted"> · <bdi dir="ltr">{{ order.customer.phone }}</bdi></span>
               </span>
-              <span class="text-paper-muted">{{ order.status|status_ar }}</span>
+              <span class="text-paper-muted">{{ order.get_status_display }}</span>
             </li>
           {% endfor %}
         </ul>

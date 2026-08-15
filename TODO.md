@@ -72,6 +72,13 @@ Full product spec: [AGENTS.md](AGENTS.md).
 - [x] Persistent chat thread on `/chat/` with order links
 - [x] Label chips on Kareem requests list + detail
 
+### Continual chats — bind / reply / fork — **done**
+
+- [x] `Conversation.parent` + unique order binding (intake binds in place)
+- [x] Labeler guard: unbound new_request binds; bound new_request forks (move message)
+- [x] Two-way composers on customer order chat and Kareem request detail
+- [x] `/chat/` redirects to the open order chat when one exists
+
 ---
 
 ## Later (post-demo / v1)

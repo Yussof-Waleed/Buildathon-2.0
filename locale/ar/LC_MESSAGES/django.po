@@ -1,0 +1,305 @@
+# Arabic translations for Warsha
+msgid ""
+msgstr ""
+"Project-Id-Version: Warsha\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-15 17:31+0300\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#: catalog/kareem_views.py:38
+msgid "Diagnostic created."
+msgstr "تم إنشاء التشخيص."
+
+#: catalog/kareem_views.py:70
+msgid "Diagnostic updated."
+msgstr "تم تحديث التشخيص."
+
+#: catalog/kareem_views.py:96
+msgid "Cannot delete a diagnostic linked to orders."
+msgstr "لا يمكن حذف تشخيص مرتبط بطلبات."
+
+#: catalog/kareem_views.py:100
+msgid "Diagnostic deleted."
+msgstr "تم حذف التشخيص."
+
+#: catalog/kareem_views.py:112
+msgid "Label added."
+msgstr "تم إضافة الوسم."
+
+#: catalog/kareem_views.py:137 catalog/kareem_views.py:145
+msgid "Invalid label titles."
+msgstr "عناوين الوسم غير صالحة."
+
+#: catalog/kareem_views.py:143
+msgid "Label updated."
+msgstr "تم تحديث الوسم."
+
+#: catalog/kareem_views.py:156
+msgid "Cannot delete labels linked to orders."
+msgstr "لا يمكن حذف وسوم مرتبطة بطلبات."
+
+#: catalog/kareem_views.py:160
+msgid "Label deleted."
+msgstr "تم حذف الوسم."
+
+#: jobs/kareem_views.py:191
+msgid "This order cannot be quoted — status is not pending review."
+msgstr "لا يمكن تسعير هذا الطلب — الحالة ليست قيد المراجعة."
+
+#: jobs/kareem_views.py:196
+msgid "Choose a diagnostic."
+msgstr "اختر تشخيصاً."
+
+#: jobs/kareem_views.py:205
+#, python-format
+msgid "Quote sent — %(price)s EGP"
+msgstr "تم إرسال عرض السعر — %(price)s جنيه"
+
+#: jobs/kareem_views.py:219
+msgid "Payment cannot be confirmed for this order."
+msgstr "لا يمكن تأكيد الدفع لهذا الطلب."
+
+#: jobs/kareem_views.py:229
+msgid "Payment confirmed (dev) — work started."
+msgstr "تم تأكيد الدفع (تجريبي) — الطلب قيد التنفيذ."
+
+#: jobs/kareem_views.py:241
+msgid "Order cannot be marked ready for pickup."
+msgstr "لا يمكن تعليم الطلب جاهز للاستلام."
+
+#: jobs/kareem_views.py:245
+msgid "Order marked ready for pickup — customer notified."
+msgstr "تم تعليم الطلب جاهز للاستلام — تم إشعار العميل."
+
+#: jobs/kareem_views.py:257
+msgid "Steps cannot be completed before work starts."
+msgstr "لا يمكن إتمام خطوات قبل بدء العمل."
+
+#: jobs/kareem_views.py:261
+msgid "Step not found."
+msgstr "الخطوة غير موجودة."
+
+#: jobs/kareem_views.py:267
+msgid "All steps done — order ready for pickup."
+msgstr "تم إنجاز كل الخطوات — الطلب جاهز للاستلام."
+
+#: jobs/kareem_views.py:269
+msgid "Step completed."
+msgstr "تم إنجاز الخطوة."
+
+#: jobs/kareem_views.py:281
+msgid "Order cannot be marked completed."
+msgstr "لا يمكن تعليم الطلب مكتمل."
+
+#: jobs/kareem_views.py:285
+msgid "Order completed — car collected."
+msgstr "تم تعليم الطلب مكتمل — تم استلام العربية."
+
+#: jobs/models.py:11 templates/customer/orders_list.html:33
+msgid "Pending review"
+msgstr "قيد المراجعة"
+
+#: jobs/models.py:12
+msgid "Quoted"
+msgstr "بانتظار الدفع"
+
+#: jobs/models.py:13
+msgid "In progress"
+msgstr "جاري الشغل"
+
+#: jobs/models.py:14
+msgid "Ready for pickup"
+msgstr "جاهزة للاستلام"
+
+#: jobs/models.py:15
+msgid "Completed"
+msgstr "تم الاستلام"
+
+#: jobs/models.py:16
+msgid "Cancelled"
+msgstr "ملغي"
+
+#: jobs/models.py:146 jobs/templatetags/warsha_ui.py:144
+msgid "Customer"
+msgstr "العميل"
+
+#: jobs/models.py:147
+msgid "Mechanic"
+msgstr "الميكانيكي"
+
+#: jobs/models.py:148
+msgid "System"
+msgstr "النظام"
+
+#: jobs/models.py:151
+msgid "Web"
+msgstr "ويب"
+
+#: jobs/models.py:152
+msgid "WhatsApp"
+msgstr "واتساب"
+
+#: jobs/templatetags/warsha_ui.py:144
+msgid "You"
+msgstr "أنت"
+
+#: jobs/templatetags/warsha_ui.py:146
+msgid "Kareem"
+msgstr "كريم"
+
+#: jobs/views.py:50
+msgid "Enter your mobile number."
+msgstr "أدخل رقم الموبايل."
+
+#: jobs/views.py:60
+msgid "Invalid number. Example: ⁦01012345678⁩ or ⁦+201012345678⁩"
+msgstr "رقم غير صالح. مثال: ⁦01012345678⁩ أو ⁦+201012345678⁩"
+
+#: jobs/views.py:76
+msgid "Type your message or record audio."
+msgstr "اكتب رسالتك أو سجّل رسالة صوتية."
+
+#: payments/models.py:9
+msgid "Pending"
+msgstr "معلق"
+
+#: payments/models.py:10
+msgid "Paid"
+msgstr "مدفوع"
+
+#: payments/models.py:11
+msgid "Failed"
+msgstr "فشل"
+
+#: payments/views.py:28
+msgid "This order cannot be paid."
+msgstr "لا يمكن الدفع لهذا الطلب."
+
+#: payments/views.py:37
+#, python-format
+msgid "Paymob error: %(detail)s"
+msgstr "خطأ Paymob: %(detail)s"
+
+#: templates/mechanic/diagnostic_form.html:4
+#: templates/mechanic/labels_list.html:4
+msgid "Warsha"
+msgstr "ورشة"
+
+#: templates/mechanic/diagnostic_form.html:4
+#: templates/mechanic/diagnostic_form.html:8
+msgid "Edit diagnostic"
+msgstr "تعديل تشخيص"
+
+#: templates/mechanic/diagnostic_form.html:4
+#: templates/mechanic/diagnostic_form.html:8
+msgid "New diagnostic"
+msgstr "تشخيص جديد"
+
+#: templates/mechanic/diagnostic_form.html:10
+msgid "All diagnostics"
+msgstr "كل التشخيصات"
+
+#: templates/mechanic/diagnostic_form.html:17
+#: templates/mechanic/diagnostic_form.html:39
+#: templates/mechanic/labels_list.html:17
+msgid "Arabic title"
+msgstr "العنوان بالعربية"
+
+#: templates/mechanic/diagnostic_form.html:21
+#: templates/mechanic/diagnostic_form.html:43
+#: templates/mechanic/labels_list.html:21
+msgid "English title"
+msgstr "العنوان بالإنجليزية"
+
+#: templates/mechanic/diagnostic_form.html:25
+msgid "Price (EGP)"
+msgstr "السعر (جنيه)"
+
+#: templates/mechanic/diagnostic_form.html:31
+msgid "Steps"
+msgstr "الخطوات"
+
+#: templates/mechanic/diagnostic_form.html:47
+msgid "Minutes"
+msgstr "الدقائق"
+
+#: templates/mechanic/diagnostic_form.html:51
+msgid "Sort order"
+msgstr "الترتيب"
+
+#: templates/mechanic/diagnostic_form.html:55
+msgid "Arabic description"
+msgstr "الوصف بالعربية"
+
+#: templates/mechanic/diagnostic_form.html:59
+msgid "English description"
+msgstr "الوصف بالإنجليزية"
+
+#: templates/mechanic/diagnostic_form.html:65
+#: templates/mechanic/labels_list.html:44
+msgid "Delete"
+msgstr "حذف"
+
+#: templates/mechanic/diagnostic_form.html:76
+#: templates/mechanic/labels_list.html:38
+msgid "Save"
+msgstr "حفظ"
+
+#: templates/mechanic/labels_list.html:4 templates/mechanic/labels_list.html:9
+msgid "Labels"
+msgstr "الوسوم"
+
+#: templates/mechanic/labels_list.html:10
+msgid "Classify orders"
+msgstr "تصنيف الطلبات"
+
+#: templates/mechanic/labels_list.html:24
+msgid "Add"
+msgstr "إضافة"
+
+#: templates/mechanic/labels_list.html:51
+msgid "No labels yet."
+msgstr "لا توجد وسوم."
+
+#: templates/mechanic/request_detail.html:93
+#: templates/shared/partials/message_bubble.html:29
+#: templates/shared/partials/message_bubble.html:49
+msgid "EGP"
+msgstr "جنيه"
+
+#: templates/shared/partials/locale_toggle.html:2
+msgid "Language"
+msgstr "اللغة"
+
+#: templates/shared/partials/message_bubble.html:25
+msgid "Price quote"
+msgstr "عرض السعر"
+
+#: templates/shared/partials/message_bubble.html:36
+msgid "min"
+msgstr "د"
+
+#: templates/shared/partials/message_bubble.html:42
+msgid "Kareem's note:"
+msgstr "ملاحظة كريم:"
+
+#: templates/shared/partials/message_bubble.html:49
+msgid "Pay"
+msgstr "ادفع"
+
+#: templates/shared/partials/message_bubble.html:53
+msgid "Paymob checkout — waiting for account keys"
+msgstr "الدفع عبر Paymob — في انتظار مفاتيح الحساب"
+
+#: templates/shared/partials/message_bubble.html:59
+msgid "Completed:"
+msgstr "تم إنجاز:"
+
+#: templates/shared/partials/message_bubble.html:74
+msgid "Open order"
+msgstr "افتح الطلب"

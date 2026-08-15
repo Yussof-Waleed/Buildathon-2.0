@@ -22,18 +22,31 @@ def classify_message(
     customer: Customer,
     text: str,
     open_orders: list[dict],
+    current_order_id: int | None = None,
 ) -> LabelerResult:
     """
     open_orders: list of {id, status, summary} for this customer's open orders.
+    current_order_id: this conversation's bound order, or None if intake.
     """
     orders_block = '\n'.join(
         f'- id={o["id"]}, status={o["status"]}, summary={o["summary"]}'
         for o in open_orders
     ) or '(none)'
 
+    current_block = (
+        f'This message was sent on the dedicated chat for order id={current_order_id}. '
+        'Use new_request ONLY if the customer is starting a different repair '
+        '(another car or an unrelated job), not a follow-up, status question, '
+        'photo, haggle, or greeting about the current job.'
+        if current_order_id
+        else 'This message was sent on an unbound intake chat (no order yet).'
+    )
+
     prompt = f"""You route messages for Warsha, a neighbourhood car repair garage in Cairo (Arabic customers).
 
 Customer phone: {customer.phone}
+
+{current_block}
 
 Open orders for this customer (only these ids are valid for existing_order):
 {orders_block}
@@ -50,8 +63,9 @@ Classify the message. Return ONLY valid JSON with this shape:
 
 Rules:
 - new_request: customer describes a car problem, wants repair, booking, quote, or sends engine/audio issue
-- existing_order: follow-up about an open order already listed above
-- irrelevant: greetings, thanks, off-topic — reply in Arabic as reply field
+- On a bound order chat, new_request means a DIFFERENT repair — not "is it ready?", extra details, or chat about the current job
+- existing_order: follow-up about an open order already listed above (on a bound chat, use this for the current job)
+- irrelevant: greetings, thanks, off-topic — reply in Arabic as reply field (intake only; on a bound chat prefer existing_order)
 - reply must be Arabic when irrelevant
 - order_id must be null unless route is existing_order
 """
@@ -77,10 +91,16 @@ Rules:
 
     reply = (data.get('reply') or '').strip()
 
+    if current_order_id and route == 'irrelevant':
+        route = 'existing_order'
+        order_id = current_order_id
+
     if route == 'existing_order':
         valid_ids = {o['id'] for o in open_orders}
         if order_id not in valid_ids:
-            if open_orders:
+            if current_order_id in valid_ids:
+                order_id = current_order_id
+            elif open_orders:
                 order_id = open_orders[0]['id']
             else:
                 route = 'new_request'

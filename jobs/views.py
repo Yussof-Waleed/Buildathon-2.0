@@ -1,17 +1,21 @@
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.customer_session import get_customer, login_customer, require_customer
 from jobs.models import Order
 from jobs.services import (
+    _ensure_conversation,
+    _get_conversation,
     customer_has_open_orders,
-    get_or_create_intake_conversation,
+    get_or_create_current_conversation,
     process_chat_message,
     validate_audio_upload,
 )
 from payments.paymob_config import get_paymob_readiness
 
 ACTIVE_POLL_STATUSES = frozenset({
+    Order.Status.PENDING_REVIEW,
     Order.Status.QUOTED,
     Order.Status.IN_PROGRESS,
     Order.Status.READY_FOR_PICKUP,
@@ -24,8 +28,8 @@ def home(request):
 
 
 def _chat_context(customer, error=None):
-    intake = get_or_create_intake_conversation(customer)
-    thread_messages = intake.messages.all()
+    conversation = get_or_create_current_conversation(customer)
+    thread_messages = conversation.messages.all()
     poll_thread = customer_has_open_orders(customer)
     return {
         'customer': customer,
@@ -33,7 +37,15 @@ def _chat_context(customer, error=None):
         'thread_messages': thread_messages,
         'poll_thread': poll_thread,
         'error': error,
+        'order': conversation.order,
     }
+
+
+def _redirect_if_bound_chat(customer):
+    conversation = get_or_create_current_conversation(customer)
+    if conversation.order_id:
+        return redirect('customer-order-detail', order_id=conversation.order_id)
+    return None
 
 
 def customer_home(request):
@@ -46,7 +58,7 @@ def customer_home(request):
                 return render(
                     request,
                     'customer/phone_gate.html',
-                    {'error': 'أدخل رقم الموبايل.'},
+                    {'error': _('Enter your mobile number.')},
                 )
             try:
                 login_customer(request, raw_phone)
@@ -55,9 +67,9 @@ def customer_home(request):
                     request,
                     'customer/phone_gate.html',
                     {
-                        'error': (
-                            'رقم غير صالح. مثال: '
-                            '\u206601012345678\u2069 أو \u2066+201012345678\u2069'
+                        'error': _(
+                            'Invalid number. Example: \u206601012345678\u2069 or '
+                            '\u2066+201012345678\u2069'
                         ),
                     },
                 )
@@ -72,7 +84,7 @@ def customer_home(request):
                 'customer/chat.html',
                 _chat_context(
                     get_customer(request),
-                    error='اكتب رسالتك أو سجّل رسالة صوتية.',
+                    error=_('Type your message or record audio.'),
                 ),
             )
 
@@ -94,17 +106,25 @@ def customer_home(request):
     if customer is None:
         return render(request, 'customer/phone_gate.html')
 
+    bound = _redirect_if_bound_chat(customer)
+    if bound:
+        return bound
+
     return render(request, 'customer/chat.html', _chat_context(customer))
 
 
 @require_customer
 def customer_chat_thread(request):
     customer = get_customer(request)
-    intake = get_or_create_intake_conversation(customer)
+    conversation = get_or_create_current_conversation(customer)
     return render(
         request,
-        'shared/partials/chat_message_thread.html',
-        {'thread_messages': intake.messages.all()},
+        'shared/partials/message_thread.html',
+        {
+            'thread_messages': conversation.messages.all(),
+            'order': conversation.order,
+            'viewer': 'customer',
+        },
     )
 
 
@@ -134,12 +154,12 @@ def customer_order_detail(request, order_id):
     order = get_object_or_404(
         Order.objects.select_related('customer', 'diagnostic').prefetch_related(
             'steps',
-            'conversations__messages',
+            'conversation__messages',
         ),
         pk=order_id,
         customer=customer,
     )
-    conversation = order.conversations.first()
+    conversation = _get_conversation(order)
     messages_list = conversation.messages.all() if conversation else []
     can_cancel = order.status in (
         Order.Status.PENDING_REVIEW,
@@ -148,7 +168,7 @@ def customer_order_detail(request, order_id):
     show_agreement = order.quoted_price is not None
     payment_return = request.GET.get('paid') == 'return'
     paymob = get_paymob_readiness()
-    poll_thread = order.status in ACTIVE_POLL_STATUSES
+    poll_thread = True
 
     return render(
         request,
@@ -171,16 +191,21 @@ def customer_order_detail(request, order_id):
 def customer_order_thread(request, order_id):
     customer = get_customer(request)
     order = get_object_or_404(
-        Order.objects.prefetch_related('conversations__messages'),
+        Order.objects.prefetch_related('conversation__messages'),
         pk=order_id,
         customer=customer,
     )
-    conversation = order.conversations.first()
+    conversation = _get_conversation(order)
     messages_list = conversation.messages.all() if conversation else []
     return render(
         request,
         'shared/partials/message_thread.html',
-        {'thread_messages': messages_list},
+        {
+            'thread_messages': messages_list,
+            'order': order,
+            'paymob_ready': get_paymob_readiness()['ready'],
+            'viewer': 'customer',
+        },
     )
 
 
@@ -197,79 +222,32 @@ def customer_order_cancel(request, order_id):
         order.save(update_fields=['status', 'updated_at'])
 
     return redirect('customer-order-detail', order_id=order_id)
-    customer = get_customer(request)
-    orders = Order.objects.filter(customer=customer).order_by('-created_at')
-    return render(
-        request,
-        'customer/orders_list.html',
-        {'orders': orders, 'customer': customer},
-    )
 
 
 @require_customer
-def customer_order_detail(request, order_id):
-    customer = get_customer(request)
-    order = get_object_or_404(
-        Order.objects.select_related('customer', 'diagnostic').prefetch_related(
-            'steps',
-            'conversations__messages',
-        ),
-        pk=order_id,
-        customer=customer,
-    )
-    conversation = order.conversations.first()
-    messages_list = conversation.messages.all() if conversation else []
-    can_cancel = order.status in (
-        Order.Status.PENDING_REVIEW,
-        Order.Status.QUOTED,
-    )
-    show_agreement = order.quoted_price is not None
-    payment_return = request.GET.get('paid') == 'return'
-    paymob = get_paymob_readiness()
-    poll_thread = order.status in ACTIVE_POLL_STATUSES
-
-    return render(
-        request,
-        'customer/order_detail.html',
-        {
-            'order': order,
-            'thread_messages': messages_list,
-            'can_cancel': can_cancel,
-            'show_agreement': show_agreement,
-            'payment_return': payment_return,
-            'paymob_ready': paymob['ready'],
-            'poll_thread': poll_thread,
-        },
-    )
-
-
-@require_customer
-def customer_order_thread(request, order_id):
-    customer = get_customer(request)
-    order = get_object_or_404(
-        Order.objects.prefetch_related('conversations__messages'),
-        pk=order_id,
-        customer=customer,
-    )
-    conversation = order.conversations.first()
-    messages_list = conversation.messages.all() if conversation else []
-    return render(
-        request,
-        'shared/partials/message_thread.html',
-        {'thread_messages': messages_list},
-    )
-
-
-@require_customer
-def customer_order_cancel(request, order_id):
+def customer_order_message(request, order_id):
     if request.method != 'POST':
         return redirect('customer-order-detail', order_id=order_id)
 
     customer = get_customer(request)
     order = get_object_or_404(Order, pk=order_id, customer=customer)
+    conversation = _ensure_conversation(order)
 
-    if order.status in (Order.Status.PENDING_REVIEW, Order.Status.QUOTED):
-        order.status = Order.Status.CANCELLED
-        order.save(update_fields=['status', 'updated_at'])
+    body = request.POST.get('body', '').strip()
+    audio = request.FILES.get('audio')
+
+    if not body and not audio:
+        return redirect('customer-order-detail', order_id=order_id)
+
+    try:
+        validate_audio_upload(audio)
+    except ValidationError:
+        return redirect('customer-order-detail', order_id=order_id)
+
+    result = process_chat_message(
+        customer, body, audio=audio, conversation=conversation,
+    )
+    if result.redirect and result.order_id and result.order_id != order.pk:
+        return redirect('customer-order-detail', order_id=result.order_id)
 
     return redirect('customer-order-detail', order_id=order_id)

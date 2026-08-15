@@ -1,6 +1,6 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ LANGUAGE_CODE|default:'ar' }}" dir="{% if LANGUAGE_CODE == 'en' %}ltr{% else %}rtl{% endif %}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,7 +41,8 @@
   </script>
   <link rel="stylesheet" href="{% static 'css/warsha.css' %}">
 </head>
-<body class="min-h-dvh font-ar text-paper bg-garage-950 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(200,121,65,0.22),transparent),radial-gradient(ellipse_50%_40%_at_100%_50%,rgba(232,160,102,0.08),transparent),linear-gradient(180deg,#0c0a09_0%,#14100e_100%)] bg-fixed {% block body_class %}{% endblock %}">
+<body class="min-h-dvh {% if LANGUAGE_CODE == 'en' %}font-en{% else %}font-ar{% endif %} text-paper bg-garage-950 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(200,121,65,0.22),transparent),radial-gradient(ellipse_50%_40%_at_100%_50%,rgba(232,160,102,0.08),transparent),linear-gradient(180deg,#0c0a09_0%,#14100e_100%)] bg-fixed {% block body_class %}{% endblock %}">
+  {% block site_header %}
   <header class="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-copper/20 bg-garage-950/80 px-4 py-3 backdrop-blur-xl sm:px-5">
     <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-lg font-extrabold text-paper no-underline">
       <i class="fa-solid fa-screwdriver-wrench text-xl text-copper-bright drop-shadow-[0_0_8px_rgba(232,160,102,0.5)]" aria-hidden="true"></i>
@@ -50,10 +51,9 @@
         <span class="font-en text-sm font-medium tracking-wide text-copper-bright" lang="en">Warsha</span>
       </span>
     </a>
-    {% if session_customer %}
-      <a href="{% url 'customer-orders-list' %}" class="text-xs text-copper-bright no-underline">طلباتي</a>
-    {% endif %}
+    {% include "shared/partials/locale_toggle.html" %}
   </header>
+  {% endblock %}
   <main class="{% block page_class %}mx-auto max-w-lg px-4 py-4 pb-8{% endblock %}">
     {% block content %}{% endblock %}
   </main>
